@@ -1,0 +1,33 @@
+Notes on conda environment:
+
+    1. Python version must be 3.6
+    2. Must use pip to install tf and keras. Otherwise there will be version conflics. 
+        conda create -n DualGCN36 python=3.6 tensorflow-gpu=1.13.1
+        Will have conflicts when trying to install keras 2.1.4 
+    3. newer versions of hickle is required. 
+    4. mkdir ../checkpoint and ../log. These are required by the original code. 
+
+
+Package install command lines:
+
+conda create -n DualGCN36 python=3.6
+pip install tensorflow==1.13.1 keras==2.1.4
+pip install hickle (5.0.2) dill (0.3.4) scikit-learn pandas
+pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
+
+
+Above is a CPU version of TF. 
+Or a GPU version: 
+    1. Checked the version matched with tf-gpu 1.13.1, according to https://www.tensorflow.org/install/source#gpu
+        cudatoolkit=10.0 cudnn=7.4
+    2. However, cudnn=7.4 is not available now. cudnn=7.6.5 works.  
+
+conda create -n DualGCN36GPU python=3.6
+pip install tensorflow-gpu==1.13.1 keras==2.1.4
+conda install -c anaconda cudatoolkit=10.0 cudnn=7.6.5
+pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
+
+mkdir ../checkpoint
+mkdir ../log
+
+

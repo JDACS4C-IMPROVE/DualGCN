@@ -1,0 +1,5 @@
+code/__pycache__/*
+code/layers/__pycache__/*
+checkpoint/*
+log/*
+*.pyc
