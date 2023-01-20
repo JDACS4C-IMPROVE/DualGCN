@@ -41,7 +41,7 @@ from scipy.stats import pearsonr
 import hickle as hkl
 import scipy.sparse as sp
 import argparse
-from model import KerasMultiSourceDualGCNModel
+from model_original import KerasMultiSourceDualGCNModel
 
 unit_list = [256] 
 israndom = False 
@@ -302,22 +302,22 @@ def main():
     np.random.seed(123)
     random.seed(123)
     batch_size = 128
-    nb_epoch = 500
+    nb_epoch = 100
     ppi_adj_info, drug_feature, data_idx = MetadataGenerate(Drug_info_file,Cell_line_info_file,Drug_feature_file,PPI_file,selected_info_common_cell_lines, selected_info_common_genes)
     ppi_adj = CelllineGraphAdjNorm(ppi_adj_info,selected_info_common_genes)
-    data_train_idx, data_test_idx = DataSplit(data_idx,TCGA_label_set, n_splits=1)
+    data_train_idx, data_test_idx = DataSplit(data_idx,TCGA_label_set, n_splits=5)
     data_train_idx, data_test_idx = data_train_idx[0], data_test_idx[0]
 
     X_train_drug_feat,X_train_drug_adj,X_train_cellline_feat,Y_train,cancer_type_train_list=FeatureExtract(data_train_idx,drug_feature,celline_feature_folder,selected_info_common_cell_lines, selected_info_common_genes,israndom)
     X_train_cellline_feat_mean = np.mean(X_train_cellline_feat, axis=0)
     X_train_cellline_feat_std = np.std(X_train_cellline_feat, axis=0)
     X_train_cellline_feat = (X_train_cellline_feat - X_train_cellline_feat_mean) / X_train_cellline_feat_std
-    X_train = [X_train_drug_feat,X_train_drug_adj,X_train_cellline_feat,np.array([ppi_adj for i in range(X_train_drug_feat.shape[0])])]
-
+    X_train = [X_train_drug_feat, X_train_drug_adj, X_train_cellline_feat,
+                np.tile(ppi_adj, (X_train_drug_feat.shape[0], 1, 1))]
     X_test_drug_feat,X_test_drug_adj,X_test_cellline_feat,Y_test,cancer_type_test_list=FeatureExtract(data_test_idx,drug_feature,celline_feature_folder,selected_info_common_cell_lines, selected_info_common_genes,israndom)
     X_test_cellline_feat = (X_test_cellline_feat - X_train_cellline_feat_mean) / X_train_cellline_feat_std
-    X_test = [X_test_drug_feat,X_test_drug_adj,X_test_cellline_feat,np.array([ppi_adj for i in range(X_test_drug_feat.shape[0])])]
-
+    X_test = [X_test_drug_feat, X_test_drug_adj, X_test_cellline_feat, 
+                np.tile(ppi_adj, (X_test_drug_feat.shape[0], 1, 1))]
     test_data = [X_test, Y_test]
 
     model = KerasMultiSourceDualGCNModel().createMaster(X_train[0][0].shape[-1],X_train[2][0].shape[-1],unit_list)
