@@ -17,7 +17,7 @@ regression = True
 
 drug_GCN_units_list = [256, 128]
 cell_feature_fc_units_list = [32, 128]
-fc_units_list = [256, 128, 10]
+dense = [256, 128, 10]
 cell_line_gcn_units_list = [256, 256, 256, 256]
 universal_dropout = 0.1
 fc_layers_dropout = [0.3, 0.2, 0]

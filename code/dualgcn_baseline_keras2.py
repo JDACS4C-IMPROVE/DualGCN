@@ -347,8 +347,6 @@ def run(params):
     assert(n_fold > 1), "Num of split (folds) must be more than 1. "
     assert(params["use_gexpr"] or params["use_cnv"]), "Must use at least one cell line feature."
 
-    print(params["drug_GCN_units_list"])
-
     np.random.seed(seed)
     random.seed(seed)
 
@@ -382,7 +380,7 @@ def run(params):
         X_train[0][0].shape[-1],X_train[2][0].shape[-1],
         drug_gcn_units_list = params["drug_gcn_units_list"], 
         cell_feature_fc_units_list = params["cell_feature_fc_units_list"],
-        fc_units_list = params["fc_units_list"],
+        fc_units_list = params["dense"],
         cell_line_gcn_units_list = params["cell_line_gcn_units_list"],
         universal_dropout = params["universal_dropout"],
         fc_layers_dropout = params["fc_layers_dropout"]

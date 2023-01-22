@@ -15,35 +15,35 @@ additional_definitions = [
     {'name':'n_fold',
      'type':int,
      'nargs':1,
-     'default': 5,
+    #  'default': 5,
      'help':'number of folds in the cross validation'
     },
 
     {'name':'max_atoms',
      'type':int,
      'nargs':1,
-     'default': 100,
+    #  'default': 100,
      'help':'max possible size of molecule graphs'
     },
 
     {'name':'use_gexpr',
      'type':bool,
      'nargs':1,
-     'default': True,
+    #  'default': True,
      'help':'multiomic option'
     },
 
     {'name':'use_cnv',
      'type':bool,
      'nargs':1,
-     'default': True,
+    #  'default': True,
      'help':'multiomic option'
     },
 
     {'name':'regression',
      'type':bool,
      'nargs':1,
-     'default': True,
+    #  'default': True,
      'help':'regression or classification'
     },
 
@@ -58,35 +58,28 @@ additional_definitions = [
     {'name':'cell_feature_fc_units_list',
      'type': int,
      'nargs': "+", 
-     'default': [32, 128],
-     'help':'max possible size of molecule graphs'
-    },
-
-    {'name':'fc_units_list',
-     'type': int,
-     'nargs': "+", 
-     'default': [256, 128, 10],
+    #  'default': [32, 128],
      'help':'max possible size of molecule graphs'
     },
 
     {'name':'cell_line_gcn_units_list',
      'type': int,
      'nargs': "+", 
-     'default': [256, 256, 256, 256],
+    #  'default': [256, 256, 256, 256],
      'help':'max possible size of molecule graphs'
     },
 
     {'name':'universal_dropout',
      'type':float,
      'nargs':1,
-     'default': 0.1,
+    #  'default': 0.1,
      'help':'max possible size of molecule graphs'
     },
 
     {'name':'fc_layers_dropout',
      'type':float,
      'nargs': "+", 
-     'default': [0.3, 0.2, 0],
+    #  'default': [0.3, 0.2, 0],
      'help':'max possible size of molecule graphs'
     },
 ]

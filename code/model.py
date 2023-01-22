@@ -19,7 +19,7 @@ class KerasMultiSourceDualGCNModel(object):
         self.regr = regr
 
     def createMaster(self, drug_dim, cell_line_dim, 
-                    drug_GCN_units_list=[256, 128], 
+                    drug_gcn_units_list=[256, 128], 
                     cell_feature_fc_units_list=[32, 128],
                     fc_units_list=[256, 128, 10],
                     cell_line_gcn_units_list=[256, 256, 256, 256],
@@ -34,12 +34,12 @@ class KerasMultiSourceDualGCNModel(object):
         cell_line_adj_input = Input(shape=(None,None),name='cell_line_adj_input')
         
         # drug-GCN
-        GCN_layer = GraphConv(units=drug_GCN_units_list[0],step_num=1,name="DrugGraph_1_GCN")([drug_feat_input,drug_adj_input])
+        GCN_layer = GraphConv(units=drug_gcn_units_list[0],step_num=1,name="DrugGraph_1_GCN")([drug_feat_input,drug_adj_input])
         GCN_layer = Activation('relu')(GCN_layer)
         GCN_layer = BatchNormalization()(GCN_layer)
         GCN_layer = Dropout(universal_dropout, name="DrugGraph_1_out")(GCN_layer)
         
-        GCN_layer = GraphConv(units=drug_GCN_units_list[1],step_num=1,name="DrugGraph_last_GCN")([GCN_layer,drug_adj_input])
+        GCN_layer = GraphConv(units=drug_gcn_units_list[1],step_num=1,name="DrugGraph_last_GCN")([GCN_layer,drug_adj_input])
         GCN_layer = Activation('relu')(GCN_layer)
         GCN_layer = BatchNormalization()(GCN_layer)
         GCN_layer = Dropout(universal_dropout, name="DrugGraph_last_out")(GCN_layer)
