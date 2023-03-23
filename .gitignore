@@ -1,5 +1,8 @@
 code/__pycache__/*
 code/layers/__pycache__/*
 checkpoint/*
+checkpoints/*
 log/*
 *.pyc
+data_new/*
+

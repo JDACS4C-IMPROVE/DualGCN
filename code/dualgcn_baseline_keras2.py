@@ -35,6 +35,7 @@ from keras.callbacks import ModelCheckpoint,Callback,EarlyStopping,History
 from keras.utils import multi_gpu_model
 from keras.optimizers import Adam, SGD
 from keras.models import model_from_json
+
 import tensorflow as tf
 from sklearn.metrics import average_precision_score
 from scipy.stats import pearsonr
@@ -42,11 +43,31 @@ import hickle as hkl
 import scipy.sparse as sp
 import argparse
 from model import KerasMultiSourceDualGCNModel
+from os.path import join as pj
 
 #%%
 import candle
 import os
 from dualgcn_keras import DualGCNBenchmark
+import json
+#%%
+# Copied from 
+# https://github.com/JDACS4C-IMPROVE/GraphDRP/blob/d24818be79701d06fa47907a06c2d8a4602443bb/utils.py#L124 
+from math import sqrt
+from scipy import stats
+
+def rmse(y, f):
+    rmse = sqrt(((y - f)**2).mean(axis=0))
+    return rmse
+
+def mse(y, f):
+    mse = ((y - f)**2).mean(axis=0)
+    return mse
+
+def spearman(y, f):
+    rs = stats.spearmanr(y, f)[0]
+    return rs
+#%%
 
 # Just because the tensorflow warnings are a bit verbose
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -84,14 +105,26 @@ PARAMS = initialize_parameters()  # reduntant. This global Params is only for ma
 #%%
 # unit_list = [256] 
 israndom = False 
+"""
+Note 2/6/2023:
+Cross-study scheme:
+New cell lines, new drugs, and associated new responses. 
+Genes are hard-coded with PPI in the model. 
+Questions: are drug info , cell line info nessesary for modeling?
+
+
+"""
+# Meta data and Index.
 Drug_info_file = '../data/drug/1.Drug_listMon Jun 24 09_00_55 2019.csv'
 Cell_line_info_file = '../data/CCLE/Cell_lines_annotations_20181226.txt'
+# open to output
 Drug_feature_file = '../data/drug/drug_graph_feat'
 Cancer_response_exp_file = '../data/CCLE/GDSC_IC50.csv'
-PPI_file = "../data/PPI/PPI_network.txt"
 selected_info_common_cell_lines = "../data/CCLE/cellline_list.txt"
-selected_info_common_genes = "../data/CCLE/gene_list.txt"
 celline_feature_folder = "../data/CCLE/omics_data"
+# hard-coded. 
+PPI_file = "../data/PPI/PPI_network.txt"
+selected_info_common_genes = "../data/CCLE/gene_list.txt"
 
 Max_atoms = PARAMS["max_atoms"]
 
@@ -253,12 +286,14 @@ def FeatureExtract(data_idx,drug_feature, celline_feature_folder, selected_info_
     return drug_feat,drug_adj, np.array(cell_line_data_feature),target,cancer_type_list
 
 class MyCallback(Callback):
-    def __init__(self,validation_data,result_file_path,patience):
+    def __init__(self, validation_data, result_file_path, improve_score_path, patience):
         self.x_val = validation_data[0]
         self.y_val = validation_data[1]
         self.best_weight = None
         self.patience = patience
         self.result_file_path = result_file_path
+        self.improve_score_path = improve_score_path
+
     def on_train_begin(self,logs={}):
         self.wait = 0
         self.stopped_epoch = 0
@@ -269,12 +304,28 @@ class MyCallback(Callback):
         self.model.save(self.result_file_path)
         if self.stopped_epoch > 0 :
             print('Epoch %05d: early stopping' % (self.stopped_epoch + 1))
+
+        # IMPROVE supervisor HPO
+        val_loss = self.model.evaluate(self.x_val, self.y_val)
+        y_pred_val = self.model.predict(self.x_val)
+        pcc_val = pearsonr(self.y_val, y_pred_val[:,0])[0]
+        spearman_val = spearman(self.y_val, y_pred_val[:,0])
+        rmse_val = rmse(self.y_val, y_pred_val[:,0])
+
+        val_scores = {"val_loss": float(val_loss[0]), "pcc": float(pcc_val), "scc": float(spearman_val), "rmse": float(rmse_val)}
+
+        print("\nIMPROVE_RESULT val_loss:\t{}\n".format(val_scores["val_loss"]))
+        print("scores.json saved at", self.improve_score_path)
+        with open(self.improve_score_path, "w", encoding="utf-8") as f:
+            json.dump(val_scores, f, ensure_ascii=False, indent=4)
+
         return
 
     def on_epoch_begin(self, epoch, logs={}):
         return
 
     def on_epoch_end(self, epoch, logs={}):
+        # Note: early stop with pcc val as the criterion.
         y_pred_val = self.model.predict(self.x_val)
         pcc_val = pearsonr(self.y_val, y_pred_val[:,0])[0]
         print('pcc-val: %s' % str(round(pcc_val,4)))
@@ -289,15 +340,38 @@ class MyCallback(Callback):
                 self.model.stop_training = True
         return
 
-def ModelTraining(model,X_train,Y_train,validation_data,result_file_path,result_file_path_callback, batch_size=32,nb_epoch=100):
-    optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-    model.compile(optimizer = optimizer,loss='mean_squared_error',metrics=['mse'])
-    callbacks = [ModelCheckpoint(result_file_path,monitor='val_loss',save_best_only=True, save_weights_only=False), MyCallback(validation_data=validation_data,result_file_path=result_file_path_callback,patience=20)]
-    model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
-    return model
+def ModelTraining(model, X_train, Y_train, validation_data, 
+                  params):
+    learn_rate = params["learning_rate"]
+    ckpt_directory = params["ckpt_directory"]
+    batch_size = params["batch_size"]
+    nb_epoch = params["epochs"]
+    result_file_path = pj(ckpt_directory, 'best_DualGCNmodel.h5')
+    result_file_path_callback = pj(ckpt_directory, 'MyBestDualGCNModel.h5')
+    ckpt_save_best = params["ckpt_save_best"]
+    ckpt_save_weights_only = params["ckpt_save_weights_only"]
+    ckpt_save_best_metric = params["ckpt_save_best_metric"]
+    metrics = params["metrics"]
+    loss_func = params["loss"]
+    improve_score_path = pj(params["output_dir"], "scores.json")
 
-def ModelEvaluate(model,X_val,Y_val,cancer_type_test_list,data_test_idx_current,file_path_pcc_log,file_path_spearman_log,file_path_rmse_log, file_path_csv,batch_size=32):
-    Y_pred = model.predict(X_val,batch_size=batch_size)
+    optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+    model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics)
+    callbacks = [ModelCheckpoint(result_file_path, monitor=ckpt_save_best_metric, save_best_only=ckpt_save_best, save_weights_only=ckpt_save_weights_only), 
+                 MyCallback(validation_data=validation_data, result_file_path=result_file_path_callback, improve_score_path=improve_score_path, patience=20)]
+    # By default Keras' model.fit() returns a History callback object.
+    history = model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
+    return model, history
+
+def ModelEvaluate(model, X_val, Y_val, cancer_type_test_list, data_test_idx_current, params, eval_batch_size=32):
+
+    log_dir = params["log_dir"]
+    file_path_pcc_log = pj(log_dir, 'pcc_DualGCNmodel.log')
+    file_path_spearman_log = pj(log_dir, 'spearman_DualGCNmodel.log')
+    file_path_rmse_log = pj(log_dir, 'rmse_DualGCNmodel.log')
+    file_path_csv = pj(log_dir, 'result_DualGCNmodel.csv')
+
+    Y_pred = model.predict(X_val, batch_size=eval_batch_size)
     overall_pcc = pearsonr(Y_pred[:,0],Y_val)[0]
     overall_rmse = mean_squared_error(Y_val,Y_pred[:,0],squared=False)
     overall_spearman = spearmanr(Y_pred[:,0],Y_val)[0]
@@ -336,12 +410,21 @@ def ModelEvaluate(model,X_val,Y_val,cancer_type_test_list,data_test_idx_current,
         cancertype_ = cancer_type_test_list[i]
         f_out.write('%s,%s,%s,%.4f,%.4f\n'%(drug_,cellline_,cancertype_,true_,predicted_))
     f_out.close()
+
     return cancertype2pcc
 
 
 def run(params):
+    print("In Run Function:\n")
+    ckpt_directory = params["ckpt_directory"]
+    output_dir = params["output_dir"]
+    if not os.path.exists(ckpt_directory):
+        os.mkdir(ckpt_directory)
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+
     batch_size = params["batch_size"]
-    nb_epoch = params["epochs"]
     seed = params["rng_seed"]
     n_fold = params["n_fold"]
     assert(n_fold > 1), "Num of split (folds) must be more than 1. "
@@ -387,33 +470,29 @@ def run(params):
         )
 
     print("... Train the model ...")
-    model = ModelTraining(model=model,
+    model, history = ModelTraining(model=model,
                           X_train=X_train,
                           Y_train=Y_train,
                           validation_data=test_data,
-                          result_file_path='../checkpoint/best_DualGCNmodel.h5',
-                          result_file_path_callback='../checkpoint/MyBestDualGCNModel.h5',
-                          batch_size=batch_size,
-                          nb_epoch=nb_epoch)
+                          params=params)
+
     print("... Evaluate the model ...")
     cancertype2pcc = ModelEvaluate(model=model,
                                   X_val=X_test,
                                   Y_val=Y_test,
                                   cancer_type_test_list=cancer_type_test_list,
                                   data_test_idx_current=data_test_idx,
-                                  file_path_pcc_log='../log/pcc_DualGCNmodel.log',
-                                  file_path_spearman_log='../log/spearman_DualGCNmodel.log',
-                                  file_path_rmse_log='../log/rmse_DualGCNmodel.log',
-                                  file_path_csv='../log/result_DualGCNmodel.csv',
-                                  batch_size=batch_size)
+                                  params=params,
+                                  eval_batch_size=batch_size)
     print('Evaluation finished!')
 
-    return History #TODO: what if PyTorch?
-
+    return history
 
 def main():
     params = initialize_parameters()
-    scores = run(params)
+    print(params)
+    history = run(params)
+    print("Done.")
 
 
 if __name__ == "__main__":
