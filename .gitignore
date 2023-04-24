@@ -3,3 +3,4 @@ code/layers/__pycache__/*
 checkpoint/*
 log/*
 *.pyc
+test.ipynb
