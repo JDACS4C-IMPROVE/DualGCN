@@ -100,7 +100,7 @@ TCGA_label_set = ["ALL","BLCA","BRCA","DLBC","LIHC","LUAD",
                   "LUSC","MM","NB","OV","PAAD","SCLC","SKCM",
                   "STAD","THCA",'COAD/READ','SARC','UCEC','MESO', 'PRAD']
 
-def MetadataGenerate(Drug_info_file,Cell_line_info_file,Drug_feature_file,PPI_file,selected_info_common_cell_lines,selected_info_common_genes):
+def MetadataGenerate(Drug_info_file, Cell_line_info_file, Drug_feature_file, PPI_file, selected_info_common_cell_lines, selected_info_common_genes):
     with open(selected_info_common_cell_lines) as f:
         common_cell_lines = [item.strip() for item in f.readlines()]
 
@@ -149,7 +149,9 @@ def MetadataGenerate(Drug_info_file,Cell_line_info_file,Drug_feature_file,PPI_fi
     IC50_df = IC50_df.iloc[retain_idx]
 
     data_idx = [] 
-    for each_drug in IC50_df.index:
+    for i, each_drug in enumerate(IC50_df.index):
+        if i == 10:
+            break
         for each_cellline in IC50_df.columns:
             if str(each_drug) in drug_pubchem_id_set and each_cellline in common_cell_lines:
                 if not np.isnan(IC50_df.loc[each_drug,each_cellline]) and each_cellline in cellline2cancertype.keys() and cellline2cancertype[each_cellline] in TCGA_label_set:

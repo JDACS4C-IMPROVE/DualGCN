@@ -26,6 +26,7 @@ conda create -n DualGCN36GPU python=3.6
 pip install tensorflow-gpu==1.13.1 keras==2.1.4
 conda install -c anaconda cudatoolkit=10.0 cudnn=7.6.5
 pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
+pip install 'h5py==2.10.0' --force-reinstall\
 
 mkdir ../checkpoint
 mkdir ../log
