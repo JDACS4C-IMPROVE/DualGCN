@@ -42,8 +42,7 @@ import hickle as hkl
 import scipy.sparse as sp
 import argparse
 from model import KerasMultiSourceDualGCNModel
-
-#%%
+# from get_data import path_function
 import candle
 import os
 from dualgcn_keras import DualGCNBenchmark
@@ -100,7 +99,7 @@ TCGA_label_set = ["ALL","BLCA","BRCA","DLBC","LIHC","LUAD",
                   "LUSC","MM","NB","OV","PAAD","SCLC","SKCM",
                   "STAD","THCA",'COAD/READ','SARC','UCEC','MESO', 'PRAD']
 
-def MetadataGenerate(Drug_info_file, Cell_line_info_file, Drug_feature_file, PPI_file, selected_info_common_cell_lines, selected_info_common_genes):
+def MetadataGenerate(Drug_info_file, Cell_line_info_file, Drug_feature_file, PPI_file, selected_info_common_cell_lines, selected_info_common_genes, **kwargs):
     with open(selected_info_common_cell_lines) as f:
         common_cell_lines = [item.strip() for item in f.readlines()]
 
@@ -212,7 +211,7 @@ def CalculateGraphFeat(feat_mat,adj_list,israndom=False):
     adj_mat[len(adj_list):,len(adj_list):] = norm_adj_2
     return [feat,adj_mat]
 
-def CelllineGraphAdjNorm(ppi_adj_info,selected_info_common_genes):
+def CelllineGraphAdjNorm(ppi_adj_info,selected_info_common_genes, **kwargs):
     with open(selected_info_common_genes) as f:
         common_genes = [item.strip() for item in f.readlines()]
     nb_nodes = len(common_genes)
@@ -225,7 +224,7 @@ def CelllineGraphAdjNorm(ppi_adj_info,selected_info_common_genes):
     norm_adj = NormalizeAdj(adj_mat)
     return norm_adj 
 
-def FeatureExtract(data_idx,drug_feature, celline_feature_folder, selected_info_common_cell_lines, selected_info_common_genes,israndom=False):
+def FeatureExtract(data_idx,drug_feature, celline_feature_folder, selected_info_common_cell_lines, selected_info_common_genes,israndom=False, **kwargs):
     cancer_type_list = []
     nb_instance = len(data_idx)
     drug_data = [[] for item in range(nb_instance)]
@@ -298,7 +297,7 @@ def ModelTraining(model,X_train,Y_train,validation_data,result_file_path,result_
     model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
     return model
 
-def ModelEvaluate(model,X_val,Y_val,cancer_type_test_list,data_test_idx_current,file_path_pcc_log,file_path_spearman_log,file_path_rmse_log, file_path_csv,batch_size=32):
+def ModelEvaluate(model,X_val,Y_val,cancer_type_test_list,data_test_idx_current,file_path_pcc_log,file_path_spearman_log,file_path_rmse_log, file_path_csv,batch_size=32, **kwargs):
     Y_pred = model.predict(X_val,batch_size=batch_size)
     overall_pcc = pearsonr(Y_pred[:,0],Y_val)[0]
     overall_rmse = mean_squared_error(Y_val,Y_pred[:,0],squared=False)
@@ -338,7 +337,7 @@ def ModelEvaluate(model,X_val,Y_val,cancer_type_test_list,data_test_idx_current,
         cancertype_ = cancer_type_test_list[i]
         f_out.write('%s,%s,%s,%.4f,%.4f\n'%(drug_,cellline_,cancertype_,true_,predicted_))
     f_out.close()
-    return cancertype2pcc
+    return cancertype2pcc, cancertype2rmse, cancertype2spearman, overall_pcc, overall_rmse, overall_spearman, Y_pred
 
 
 def run(params):
