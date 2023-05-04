@@ -183,8 +183,6 @@ def MetadataGenerate(Drug_info_file, Cell_line_info_file, Drug_feature_file, PPI
 
     data_idx = [] 
     for i, each_drug in enumerate(IC50_df.index):
-        if i == 10:
-            break
         for each_cellline in IC50_df.columns:
             if str(each_drug) in drug_pubchem_id_set and each_cellline in common_cell_lines:
                 if not np.isnan(IC50_df.loc[each_drug,each_cellline]) and each_cellline in cellline2cancertype.keys() and cellline2cancertype[each_cellline] in TCGA_label_set:
