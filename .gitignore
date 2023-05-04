@@ -1,6 +1,8 @@
 
 code/__pycache__/*
 code/layers/__pycache__/*
+checkpoint/*
+checkpoints/*
 log/*
 data_new/*
 checkpoint/*
@@ -8,3 +10,5 @@ checkpoints/best_DualGCNmodel.h5
 checkpoints/MyBestDualGCNModel.h5
 *.pyc
 test.ipynb
+data_new/*
+

@@ -1,3 +1,10 @@
+"""
+Created by Ruibo. 
+
+Define additional parameters, and Candle Benchmark class in this file. 
+
+"""
+
 import candle
 import os
 
@@ -48,39 +55,46 @@ additional_definitions = [
     },
 
     # Model structure
-    {'name':'drug_GCN_units_list',
+    {'name':'drug_gcn_units_list',
      'type': int,
      'nargs': "+", 
     #  'default': [256, 128],
-     'help':'max possible size of molecule graphs'
+     'help':'Drug GCN units'
     },
 
     {'name':'cell_feature_fc_units_list',
      'type': int,
      'nargs': "+", 
     #  'default': [32, 128],
-     'help':'max possible size of molecule graphs'
+     'help':'cell line FC units'
     },
 
     {'name':'cell_line_gcn_units_list',
      'type': int,
      'nargs': "+", 
     #  'default': [256, 256, 256, 256],
-     'help':'max possible size of molecule graphs'
+     'help':'cell line GCN units'
     },
 
     {'name':'universal_dropout',
      'type':float,
      'nargs':1,
     #  'default': 0.1,
-     'help':'max possible size of molecule graphs'
+     'help':'universal dropout'
     },
 
     {'name':'fc_layers_dropout',
      'type':float,
      'nargs': "+", 
     #  'default': [0.3, 0.2, 0],
-     'help':'max possible size of molecule graphs'
+     'help':'the dropout rates for FC layers'
+    },
+
+    {'name':'log_dir',
+     'type': str,
+     'nargs': 1, 
+    #  'default': "../log/",
+     'help':'dir to save the results files during the evaluation'
     },
 ]
 
