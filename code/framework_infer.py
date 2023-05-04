@@ -29,7 +29,7 @@ def launch(path_dict, log_dict, ckpt_dir):
     X_cellline_feat = (X_cellline_feat - X_cellline_feat_mean) / X_cellline_feat_std
     X = [X_drug_feat, X_drug_adj, X_cellline_feat, np.tile(ppi_adj, (X_drug_feat.shape[0], 1, 1))]
     model = load_model(
-        os.join(ckpt_dir, 'MyBestDualGCNModel.h5'),   #TODO: must match with the file name in training func. 
+        os.path.join(ckpt_dir, 'MyBestDualGCNModel.h5'),   #TODO: must match with the file name in training func. 
         custom_objects={'GraphConv': GraphConv}
         )
     cancertype2pcc, cancertype2rmse, cancertype2spearman, overall_pcc, overall_rmse, overall_spearman, Y_pred = ModelEvaluate(model=model,
@@ -37,23 +37,27 @@ def launch(path_dict, log_dict, ckpt_dir):
                                   Y_val=Y,
                                   cancer_type_test_list=cancer_type_list,
                                   data_test_idx_current=data_idx,
-                                  batch_size=128,
+                                  eval_batch_size=128,
                                   **log_dict)
     return Y_pred, Y, cancertype2pcc, cancertype2rmse, cancertype2spearman, overall_pcc, overall_rmse, overall_spearman
 
 
 def run(params):
     print("In Run Function:\n")
-    args = params
-    # # In GraphDRP it is transformed to another type:
-    # args = candle.ArgumentStruct(**params)
-    # print("Note: now the args obj has the type", type(args))
+    # In GraphDRP it is transformed to another type instead of Dict:
+    args = candle.ArgumentStruct(**params)
+    print("Note: in run() the args obj has the type", type(args))
 
     path_dict = path_function('../data')  #TODO: need to match with preprocessing. 
     log_dict = output_paths(args.log_dir)
     ckpt_dir = args.ckpt_directory
+
+    # Check dir exists. 
+    if not os.path.exists(args.log_dir):
+        os.mkdir(args.log_dir)
+
     Y_pred, Y, cancertype2pcc, cancertype2rmse, cancertype2spearman, overall_pcc, overall_rmse, overall_spearman = launch(path_dict, log_dict, ckpt_dir)
-    #TODO: if they require to save the Y_pred. 
+    #TODO: mod here if they require to save the Y_pred. 
 
     scores = {"mse": float(overall_rmse) ** 2,
         "rmse": float(overall_rmse),
@@ -61,7 +65,7 @@ def run(params):
         "scc": float(overall_spearman)}
 
     # Supervisor HPO
-    with open(os.join(args.output_dir, "scores.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(args.output_dir, "scores.json"), "w", encoding="utf-8") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)
 
     return scores

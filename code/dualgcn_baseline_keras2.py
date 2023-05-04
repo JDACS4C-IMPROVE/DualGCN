@@ -365,13 +365,8 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     history = model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
     return model, history
 
-def ModelEvaluate(model, X_val, Y_val, cancer_type_test_list, data_test_idx_current, params, eval_batch_size=32):
-
-    log_dir = params["log_dir"]
-    file_path_pcc_log = pj(log_dir, 'pcc_DualGCNmodel.log')
-    file_path_spearman_log = pj(log_dir, 'spearman_DualGCNmodel.log')
-    file_path_rmse_log = pj(log_dir, 'rmse_DualGCNmodel.log')
-    file_path_csv = pj(log_dir, 'result_DualGCNmodel.csv')
+def ModelEvaluate(model, X_val, Y_val, cancer_type_test_list, data_test_idx_current,
+                  file_path_pcc_log, file_path_spearman_log, file_path_rmse_log, file_path_csv, eval_batch_size=32):
 
     Y_pred = model.predict(X_val, batch_size=eval_batch_size)
     overall_pcc = pearsonr(Y_pred[:,0],Y_val)[0]
