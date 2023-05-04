@@ -27,7 +27,12 @@ pip install tensorflow-gpu==1.13.1 keras==2.1.4
 conda install -c anaconda cudatoolkit=10.0 cudnn=7.6.5
 pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
 
+The next line of code, we will need to run it (and force it) to load the h5 saved model from TF1. In case of NOT doing it,
+we will receive a Traceback Error from python. 
+pip install 'h5py==2.10.0' --force-reinstall\
+
 mkdir ../checkpoint
 mkdir ../log
 
 
+NOTE: create a bash shell file that allows us to start the model, similar to Rohan's repo sh file. 

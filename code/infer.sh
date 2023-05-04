@@ -10,7 +10,8 @@
 # arg 3 CANDLE_CONFIG
 
 ### Path to your CANDLEized model's main Python script###
-CANDLE_MODEL=/usr/local/DualGCN/dualgcn_baseline_keras2.py
+#-- CANDLE_MODEL=/usr/local/GraphDRP/graphdrp_baseline_pytorch.py
+CANDLE_MODEL=/usr/local/GraphDRP/frm_infer.py
 
 if [ $# -lt 2 ] ; then
         echo "Illegal number of parameters"
@@ -53,4 +54,3 @@ echo "using CANDLE_CONFIG ${CANDLE_CONFIG}"
 # Set up environmental variables and execute model
 echo "running command ${CMD}"
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} CANDLE_DATA_DIR=${CANDLE_DATA_DIR} $CMD
-

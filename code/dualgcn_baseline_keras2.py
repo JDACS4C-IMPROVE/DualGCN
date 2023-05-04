@@ -133,7 +133,7 @@ TCGA_label_set = ["ALL","BLCA","BRCA","DLBC","LIHC","LUAD",
                   "LUSC","MM","NB","OV","PAAD","SCLC","SKCM",
                   "STAD","THCA",'COAD/READ','SARC','UCEC','MESO', 'PRAD']
 
-def MetadataGenerate(Drug_info_file,Cell_line_info_file,Drug_feature_file,PPI_file,selected_info_common_cell_lines,selected_info_common_genes):
+def MetadataGenerate(Drug_info_file, Cell_line_info_file, Drug_feature_file, PPI_file, selected_info_common_cell_lines, selected_info_common_genes, **kwargs):
     with open(selected_info_common_cell_lines) as f:
         common_cell_lines = [item.strip() for item in f.readlines()]
 
@@ -182,7 +182,7 @@ def MetadataGenerate(Drug_info_file,Cell_line_info_file,Drug_feature_file,PPI_fi
     IC50_df = IC50_df.iloc[retain_idx]
 
     data_idx = [] 
-    for each_drug in IC50_df.index:
+    for i, each_drug in enumerate(IC50_df.index):
         for each_cellline in IC50_df.columns:
             if str(each_drug) in drug_pubchem_id_set and each_cellline in common_cell_lines:
                 if not np.isnan(IC50_df.loc[each_drug,each_cellline]) and each_cellline in cellline2cancertype.keys() and cellline2cancertype[each_cellline] in TCGA_label_set:
@@ -243,7 +243,7 @@ def CalculateGraphFeat(feat_mat,adj_list,israndom=False):
     adj_mat[len(adj_list):,len(adj_list):] = norm_adj_2
     return [feat,adj_mat]
 
-def CelllineGraphAdjNorm(ppi_adj_info,selected_info_common_genes):
+def CelllineGraphAdjNorm(ppi_adj_info,selected_info_common_genes, **kwargs):
     with open(selected_info_common_genes) as f:
         common_genes = [item.strip() for item in f.readlines()]
     nb_nodes = len(common_genes)
@@ -256,7 +256,7 @@ def CelllineGraphAdjNorm(ppi_adj_info,selected_info_common_genes):
     norm_adj = NormalizeAdj(adj_mat)
     return norm_adj 
 
-def FeatureExtract(data_idx,drug_feature, celline_feature_folder, selected_info_common_cell_lines, selected_info_common_genes,israndom=False):
+def FeatureExtract(data_idx,drug_feature, celline_feature_folder, selected_info_common_cell_lines, selected_info_common_genes,israndom=False, **kwargs):
     cancer_type_list = []
     nb_instance = len(data_idx)
     drug_data = [[] for item in range(nb_instance)]
@@ -363,13 +363,8 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     history = model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
     return model, history
 
-def ModelEvaluate(model, X_val, Y_val, cancer_type_test_list, data_test_idx_current, params, eval_batch_size=32):
-
-    log_dir = params["log_dir"]
-    file_path_pcc_log = pj(log_dir, 'pcc_DualGCNmodel.log')
-    file_path_spearman_log = pj(log_dir, 'spearman_DualGCNmodel.log')
-    file_path_rmse_log = pj(log_dir, 'rmse_DualGCNmodel.log')
-    file_path_csv = pj(log_dir, 'result_DualGCNmodel.csv')
+def ModelEvaluate(model, X_val, Y_val, cancer_type_test_list, data_test_idx_current,
+                  file_path_pcc_log, file_path_spearman_log, file_path_rmse_log, file_path_csv, eval_batch_size=32):
 
     Y_pred = model.predict(X_val, batch_size=eval_batch_size)
     overall_pcc = pearsonr(Y_pred[:,0],Y_val)[0]
@@ -410,8 +405,7 @@ def ModelEvaluate(model, X_val, Y_val, cancer_type_test_list, data_test_idx_curr
         cancertype_ = cancer_type_test_list[i]
         f_out.write('%s,%s,%s,%.4f,%.4f\n'%(drug_,cellline_,cancertype_,true_,predicted_))
     f_out.close()
-
-    return cancertype2pcc
+    return cancertype2pcc, cancertype2rmse, cancertype2spearman, overall_pcc, overall_rmse, overall_spearman, Y_pred
 
 
 def run(params):
