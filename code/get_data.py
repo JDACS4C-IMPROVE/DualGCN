@@ -30,11 +30,11 @@ def path_function(data_dir):
             'celline_feature_folder': celline_feature_folder,
             'TCGA_label_set': TCGA_label_set}    
     
-def output_paths(log):
-    file_path_pcc_log = os.path.join(log, 'pcc_DualGCNmodel_inference.log')
-    file_path_spearman_log= os.path.join(log, 'spearman_DualGCNmodel_inference.log')
-    file_path_rmse_log = os.path.join(log, 'rmsd_DualGCNmodel_inference.log')
-    file_path_csv = os.path.join(log, 'result_DualGCNmodel_inference.csv')
+def output_paths(log_dir):
+    file_path_pcc_log = os.path.join(log_dir, 'pcc_DualGCNmodel_inference.log')
+    file_path_spearman_log= os.path.join(log_dir, 'spearman_DualGCNmodel_inference.log')
+    file_path_rmse_log = os.path.join(log_dir, 'rmsd_DualGCNmodel_inference.log')
+    file_path_csv = os.path.join(log_dir, 'result_DualGCNmodel_inference.csv')
     return {'file_path_pcc_log': file_path_pcc_log,
             'file_path_spearman_log': file_path_spearman_log,
             'file_path_rmse_log': file_path_rmse_log,

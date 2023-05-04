@@ -297,7 +297,8 @@ def ModelTraining(model,X_train,Y_train,validation_data,result_file_path,result_
     model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
     return model
 
-def ModelEvaluate(model,X_val,Y_val,cancer_type_test_list,data_test_idx_current,file_path_pcc_log,file_path_spearman_log,file_path_rmse_log, file_path_csv,batch_size=32, **kwargs):
+def ModelEvaluate(model,X_val,Y_val,cancer_type_test_list,data_test_idx_current,
+                  file_path_pcc_log,file_path_spearman_log,file_path_rmse_log, file_path_csv,batch_size=32):
     Y_pred = model.predict(X_val,batch_size=batch_size)
     overall_pcc = pearsonr(Y_pred[:,0],Y_val)[0]
     overall_rmse = mean_squared_error(Y_val,Y_pred[:,0],squared=False)
