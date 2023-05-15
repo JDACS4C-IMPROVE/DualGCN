@@ -11,7 +11,5 @@ checkpoints/MyBestDualGCNModel.h5
 *.pyc
 test.ipynb
 data_new/*
-code/new_data/*
-code/csa_data/*
-code/single_drug_drp/*
 new_data.rar
+csa_data/*
