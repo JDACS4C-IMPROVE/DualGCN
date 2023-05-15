@@ -26,6 +26,7 @@ import requests
 from rdkit import Chem
 import time
 import hickle
+from improve_utils import load_single_drug_response_data_v2
 
 def cids_to_rdkit_molecules(pubchem_cids: list):
     """
@@ -86,7 +87,30 @@ def meta_file_to_hickle(f_drug_meta_data="data/drug/1.Drug_listMon Jun 24 09_00_
     mols = cids_to_rdkit_molecules(cids)
     feat_list = rdkit_mols_to_dc_features(mols)
     save_hickles(feat_list, drug_ids, save_dir)
+    return None
     
+def improve_utils_to_hickle(drug_response_df: pd.DataFrame, save_dir="data_new/drug/drug_graph_feat"):
+    """
+    Convert the PubChem CIDs in improve_utils returned DFs to DeepChem graphs, and save the graphs as hickle files. 
+    Input:
+        The DataFrame returned by improve_utils.
+    Output:
+        No return values. The generated graphs will be saved in the given save_dir.load_single_drug_response_data_v2.
+        The drug names will be the IMPROVE chem IDs (CID with "PC_")
+    """
+    try:
+        impr_ids = drug_response_df["improve_chem_id"].unique()
+        cid_list = [each_cid.replace("PC_", "") for each_cid in impr_ids]
+    except KeyError:
+        print('Column "improve_chem_id" not found in the passed response DF. The available columns are ', drug_response_df.columns)
+        return None
+
+    mols = cids_to_rdkit_molecules(cid_list)
+    feat_list = rdkit_mols_to_dc_features(mols)
+    save_hickles(feat_list, impr_ids, save_dir)
+    return None
+
+
 #%% Test code
 def test_same_graph():
     import networkx as nx
@@ -122,12 +146,21 @@ def test_same_graph():
     assert(nx.is_isomorphic(g0, g1))
 
 
-def test_save_hickle():
-    # TBD 
-    pass
+def test_improve_to_hickle():
+    split = 0
+    source_data_name = "CCLE"
+    y_col_name = "auc"
+    x = load_single_drug_response_data_v2(
+        source=source_data_name,
+        split_file_name=f"{source_data_name}_split_{split}_val.txt",
+        y_col_name=y_col_name
+        )
+    improve_utils_to_hickle(x, save_dir="data_new/drug/test")
+    return None    
 
 if __name__ == "__main__":
     # Run test code. 
+    test_improve_to_hickle()
     test_same_graph()
     meta_file_to_hickle()
 
