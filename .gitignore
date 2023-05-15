@@ -4,6 +4,7 @@ code/layers/__pycache__/*
 checkpoint/*
 checkpoints/*
 log/*
+logs/*
 data_new/*
 checkpoint/*
 checkpoints/best_DualGCNmodel.h5
