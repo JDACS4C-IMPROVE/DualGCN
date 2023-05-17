@@ -21,14 +21,9 @@ PPI network.
 import os
 import improve_utils as iu
 import pandas as pd
-from tqdm import tqdm
+# from tqdm import tqdm
 from time import time as t
 
-gene_list = pd.read_csv('./data/CCLE/gene_list.txt', header= None).values.astype(str).flatten().tolist()
-not_in_dataset = ['SEPT6', 'SEPT5', 'FGFR1OP', 'H3F3A', 'C15orf65', 'SEPT9', 'H3F3B', 'CARS']
-
-for gene in not_in_dataset:
-    gene_list.remove(gene)
 
 def processing_data(df_ge, df_cn):
     """
@@ -53,58 +48,80 @@ def processing_data(df_ge, df_cn):
     df_cn = df_cn.sort_index()
     return df_ge, df_cn
 
-def emulating_original_data():
-    """
-    Main function to emulate the original data from the curated dataset by ANL.
 
-    This will create new data in the folder ./data/new_data/ with the same format as the original data, 
+def emulating_original_data(output_dir):
+    """
+    Save the omics data. 
     saving one dataframe per patient into a csv file with the name of the patient as the name of the file.
     """
-    print("Starting Process")
+    
+    if not os.path.exists(output_dir + "omics_data/"):
+        os.makedirs(output_dir + "omics_data/", exist_ok=True)
+        
     df_ge = iu.load_gene_expression_data(gene_system_identifier="Gene_Symbol")
     df_cn = iu.load_copy_number_data(gene_system_identifier="Gene_Symbol")
     df_ge, df_cn = processing_data(df_ge, df_cn)
-    if not os.path.exists('./data/new_data/'):
-        os.makedirs('./data/new_data/', exist_ok=True)
-    for i, patient in tqdm(enumerate(df_ge.index)):
+    # Note: after this step, the GE and CN have gene symbols as columns and CL names as index. 
+    
+    # Find intersection genes, and genes that are not in the IMPROVE data.
+    gene_list = pd.read_csv('./data/CCLE/gene_list.txt', header=None).values.astype(str).flatten().tolist()
+    gene_list = [x for x in gene_list if x in df_ge.columns]
+    genes_not_in_dataset = [x for x in gene_list if x not in df_ge.columns]
+    
+    # Write intersection genes into gene_list.txt.
+    with open(output_dir + "gene_list.txt", 'w') as file:
+        for item in gene_list:
+            file.write(str(item) + '\n')
+
+    # Save patient (CL) omics csvs. 
+    for i, patient in enumerate(df_ge.index):
         gene_exp = df_ge.iloc[i]
         copy_num = df_cn.iloc[i]
         df_patient = pd.concat([gene_exp, copy_num], axis=1)
         df_patient = df_patient.loc[gene_list]
         df_patient.columns = ['gene_expression', 'copy_number']
-        df_patient.to_csv(f'./data/new_data/{patient}.csv', sep=',', index=True, header=True)
-    print("Finished Process")
+        df_patient.to_csv(output_dir + f'omics_data/{patient}.csv', sep=',', index=True, header=True)
 
-def ppi_preprocessing():
+    return genes_not_in_dataset
+
+
+def ppi_preprocessing(output_dir, genes_not_in_dataset):
     """
     Function to preprocess the PPI network. The only difference is the removal of the genes that are not in the dataset.
+    Save the processed PPI to output_dir/PPI/PPI_network_new.txt
     """
+    if not os.path.exists(output_dir + "PPI/"):
+        os.makedirs(output_dir + "PPI/", exist_ok=True)
+        
     ppi = pd.read_csv('./data/PPI/PPI_network.txt', sep='\t', header=None)
     ppi_new = ppi.copy()
-    for gene in not_in_dataset:
+    for gene in genes_not_in_dataset:
         ppi_new = ppi_new[ppi_new[0] != gene]
         ppi_new = ppi_new[ppi_new[1] != gene]
-    ppi_new.to_csv('./data/PPI/PPI_network_new.txt', sep='\t', index=False, header=False)
+    ppi_new.to_csv(output_dir + 'PPI/PPI_network_new.txt', sep='\t', index=False, header=False)
 
-def auc_response():
+
+def preprocess_omics_data(output_dir):
     """
-    Creation of the Pivot table as in the original data, the rows are the chemicals, the columns the cell lines. 
+    Processed data files will be stored in data/IMPROVE_{source}/
+    
     """
-    df_50 = iu.load_single_drug_response_data(source = 'CCLE')
-    # From the row improve_chem_id remove the string 'PC_'
-    df_50['improve_chem_id'] = df_50['improve_chem_id'].str.replace('PC_', '')
-    # Putting in the columns the improve_sample_id and in the rows the improve_chem_id
-    # we can do this with a pivot table in pandas.
-    df_50_pivot = df_50.pivot(index='improve_chem_id', columns='improve_sample_id', values='auc')
-    # Sort the columns by the name of the column
-    df_50_pivot = df_50_pivot.sort_index(axis=1)
-    df_50_pivot.to_csv('./data/auc_response.csv', sep=',', index=True, header=True)
+    print("Starting Process")
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
+    genes_not_in_dataset = emulating_original_data(output_dir)
+    ppi_preprocessing(output_dir, genes_not_in_dataset)
+    
+    print("Finished Process")
+
+
 
 if __name__ == '__main__':
     # Measure Time
     start = t()
-    emulating_original_data()
-    ppi_preprocessing()
-    auc_response()
+    preprocess_omics_data("./data/IMPROVE_test/")
     end = t()
     print(f"Time: {end - start} seconds")
+    

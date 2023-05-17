@@ -89,7 +89,7 @@ def meta_file_to_hickle(f_drug_meta_data="data/drug/1.Drug_listMon Jun 24 09_00_
     save_hickles(feat_list, drug_ids, save_dir)
     return None
     
-def improve_utils_to_hickle(drug_response_df: pd.DataFrame, save_dir="data_new/drug/drug_graph_feat"):
+def improve_utils_to_hickle(drug_response_df: pd.DataFrame, output_dir):
     """
     Convert the PubChem CIDs in improve_utils returned DFs to DeepChem graphs, and save the graphs as hickle files. 
     Input:
@@ -107,7 +107,7 @@ def improve_utils_to_hickle(drug_response_df: pd.DataFrame, save_dir="data_new/d
 
     mols = cids_to_rdkit_molecules(cid_list)
     feat_list = rdkit_mols_to_dc_features(mols)
-    save_hickles(feat_list, impr_ids, save_dir)
+    save_hickles(feat_list, impr_ids, os.path.join(output_dir, "drug/drug_graph_feat/"))
     return None
 
 
