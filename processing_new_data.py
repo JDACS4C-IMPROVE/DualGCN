@@ -58,7 +58,7 @@ def emulating_original_data(output_dir):
     if not os.path.exists(output_dir + "omics_data/"):
         os.makedirs(output_dir + "omics_data/", exist_ok=True)
         
-    df_ge = iu.load_gene_expression_data(gene_system_identifier="Gene_Symbol")
+    df_ge = iu.load_gene_expression_data(gene_system_identifier="Gene_Symbol", )
     df_cn = iu.load_copy_number_data(gene_system_identifier="Gene_Symbol")
     df_ge, df_cn = processing_data(df_ge, df_cn)
     # Note: after this step, the GE and CN have gene symbols as columns and CL names as index. 
