@@ -313,7 +313,7 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     history = model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
     return model, history
 
-def ModelEvaluate(model, X_val, Y_val, data_test_idx_current, params, eval_batch_size=32):
+def ModelEvaluate(model, X_val, Y_val, data_test_idx_current, eval_batch_size=32):
 
     Y_pred = model.predict(X_val, batch_size=eval_batch_size)
     overall_pcc = pearsonr(Y_pred[:,0],Y_val)[0]
@@ -439,7 +439,6 @@ def run(params):
                                   X_val=X_test,
                                   Y_val=Y_test,
                                   data_test_idx_current=data_test_idx,
-                                  params=params,
                                   eval_batch_size=batch_size)
     print('Evaluation finished!')
 
