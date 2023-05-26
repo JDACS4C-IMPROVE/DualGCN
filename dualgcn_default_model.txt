@@ -1,0 +1,44 @@
+[Global_Params]
+# When parameters are not overwritten by workflows, their values will be used as defaults.
+
+# Model training
+model_name = "dualgcn"
+epochs = 200 # default 500 in the paper
+batch_size = 128
+rng_seed = 123
+n_fold = 5
+learning_rate = 0.001
+metrics = ['mse']
+loss = 'mean_squared_error'
+
+
+# Model definition
+max_atoms = 100
+
+use_gexpr = True
+use_cnv = True
+regression = True
+
+drug_gcn_units_list = [256, 128]
+cell_feature_fc_units_list = [32, 128]
+dense = [256, 128, 10]
+cell_line_gcn_units_list = [256, 256, 256, 256]
+universal_dropout = 0.1
+fc_layers_dropout = [0.3, 0.2, 0]
+
+# Checkpoints and logs
+ckpt_directory = "./checkpoints/"
+ckpt_save_best = True
+ckpt_save_weights_only = False
+ckpt_save_best_metric = "val_loss"
+output_dir = "./IMPROVE_output"
+log_dir = "./logs/"
+
+log_interval = 20
+set = 'mixed'
+test_batch = 256
+test_data ='test_data'
+train_data = 'train_data'
+val_batch = 256
+val_data = 'val_data'
+
