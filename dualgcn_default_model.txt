@@ -3,17 +3,17 @@
 
 # Model training
 model_name = "dualgcn"
-epochs = 200 # default 500 in the paper
-batch_size = 128
+epochs = 100 # default 500 in the paper
+batch_size = 8
 rng_seed = 123
-n_fold = 5
-learning_rate = 0.001
+n_fold = 100
+learning_rate = 0.0001
 metrics = ['mse']
 loss = 'mean_squared_error'
 
 
 # Model definition
-max_atoms = 100
+max_atoms = 230
 
 use_gexpr = True
 use_cnv = True

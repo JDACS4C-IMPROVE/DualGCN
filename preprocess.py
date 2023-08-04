@@ -17,10 +17,10 @@ from process_gen_mol_graph import improve_utils_to_hickle
 from processing_new_data import preprocess_omics_data
 from improve_utils import load_single_drug_response_data, load_single_drug_response_data_v2
 
-source = "CCLE"  # Can be turned into CLI args later. 
+source = "CTRPv2"  # Can be turned into CLI args later. 
 output_dir = "./data/IMPROVE_{}/".format(source)
 
-responses = load_single_drug_response_data_v2(source)
+responses = load_single_drug_response_data_v2(source = 'CTRPv2', split_file_name='CTRPv2_split_0_train.txt', y_col_name='auc')
 improve_utils_to_hickle(responses, output_dir)
 
 preprocess_omics_data(output_dir)

@@ -23,7 +23,7 @@ X_cellline_feat_std  = np.std(X_cellline_feat, axis=0)
 X_cellline_feat = (X_cellline_feat - X_cellline_feat_mean) / X_cellline_feat_std
 X = [X_drug_feat, X_drug_adj, X_cellline_feat, np.tile(ppi_adj, (X_drug_feat.shape[0], 1, 1))]
 model = load_model(
-        os.path.join(ckpt_dir, 'MyBestDualGCNModel.h5'),   #TODO: must match with the file name in training func. 
+        os.path.join(ckpt_dir, 'MyBestDualGCNModel_new.h5'),   #TODO: must match with the file name in training func. 
         custom_objects={'GraphConv': GraphConv}
         )
 cancertype2pcc = ModelEvaluate(model=model,

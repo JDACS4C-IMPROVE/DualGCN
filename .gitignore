@@ -12,5 +12,6 @@ checkpoints/MyBestDualGCNModel.h5
 *.pyc
 test.ipynb
 data_new/*
+data/*
 csa_data/*
 data/IMPROVE_CCLE/*

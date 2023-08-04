@@ -1,21 +1,7 @@
 """
-2/6/2023
+Code developed by @cesarasa
 
-@Author: Ruibo
-
-The provided code contains several functions that are used to convert PubChem Compound IDs (CIDs) to RDKit molecules, and then to DeepChem features. 
-    Finally, it saves the features of the molecules in the form of hickle files.
-
-The main function is meta_file_to_hickle(). 
-Usage example:
-```
-from process_gen_mol_graph import meta_file_to_hickle
-meta_file_to_hickle("drug_meta.csv", "hickle_file_dir")
-```
-Drug meta file mush contain a column "PubChem", which is the PubChem CID, and a column "drug_id", which is matched with the response data. 
-
-
-Current: blocked at how to get the PubCHEM of drugs. Are they provided in the curated data?
+I need to comment this code. NOTE: The test has some issues. It seems that there are hydrogen atoms without neighbors. 
 """
 
 import os
@@ -28,25 +14,21 @@ import time
 import hickle
 from improve_utils import load_single_drug_response_data_v2
 
-def cids_to_rdkit_molecules(pubchem_cids: list):
-    """
-    CID list to RDKit mol list.
+"""
+    real    0m16.160s
+    user    0m14.861s
+    sys     0m4.042s
 
-    The cids_to_rdkit_molecules function takes a list of PubChem CIDs and returns a list of RDKit molecules. 
-        It sends a GET request to the PubChem database to retrieve the SDF file of the compound with the specified CID. 
-        If the status code of the response is 429 (too many requests), it waits for 0.2 seconds and tries again until it succeeds.
+    This is the preprocessing time for the drug data.
+"""
+def smiles_to_molecules(smiles_list):
+    """The following function aims to convert SMILES to RDKit molecules. And save all the molecules in a list.
     """
     molecules = []
-    for pubchem_cid in pubchem_cids:
-        url = f'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/CID/{pubchem_cid}/SDF'
-        while True:
-            r = requests.get(url)
-            if r.status_code == 429:
-                time.sleep(0.2)
-                continue
-            molecule = Chem.MolFromMolBlock(r.text)
-            molecules.append(molecule)
-            break
+    for smile in smiles_list:
+        molecule = Chem.MolFromSmiles(smile)
+        molecules.append(molecule)
+    
     return molecules
 
 def rdkit_mols_to_dc_features(mols: list) -> list:
@@ -69,8 +51,8 @@ def save_hickles(feature_list, drug_id_list, save_dir):
         obj = (ft.atom_features, ft.canon_adj_list, ft.deg_list)
         f_name = os.path.join(save_dir, str(drug_id_list[ii]) + ".hkl")
         hickle.dump(obj, f_name)
-
-def meta_file_to_hickle(f_drug_meta_data="data/drug/1.Drug_listMon Jun 24 09_00_55 2019.csv", save_dir="data_new/drug/drug_graph_feat"):
+        
+def meta_file_to_hickle(f_drug_meta_data="csa_data/raw_data/x_data/drug_SMILES.tsv", save_dir="data_new/drug/drug_graph_feat"):
     """
     The main function meta_file_to_hickle reads a CSV file containing drug metadata that includes PubChem CIDs and drug IDs. 
     It extracts CIDs and drug IDs from the CSV file, converts CIDs to RDKit molecules, 
@@ -81,14 +63,18 @@ def meta_file_to_hickle(f_drug_meta_data="data/drug/1.Drug_listMon Jun 24 09_00_
     output: save hickle files to the save_dir. 
         Each hickle file is named by the drug ID, as <drug_id>.hkl, and contains feat_mat, adj_list, degree_list.
     """
-    drug_meta = pd.read_csv(f_drug_meta_data)
-    cids = drug_meta.PubCHEM.values  # Make sure the meta file contains column named "PubCHEM"
-    drug_ids = drug_meta.drug_id.values  # Make sure the meta file contains column named "drug_id"
-    mols = cids_to_rdkit_molecules(cids)
+    responses_train = load_single_drug_response_data_v2(source = 'CTRPv2', split_file_name='CTRPv2_split_0_train.txt', y_col_name='auc')
+    drug_meta = pd.read_csv(f_drug_meta_data, sep="\t")
+    drug_ids = responses_train['improve_chem_id'].unique()  # Make sure the meta file contains column named "PubCHEM"
+    # drug_ids = drug_meta.drug_id.values  # Make sure the meta file contains column named "drug_id"
+    smiles_list = []
+    for response in drug_ids:
+        smiles_list.append(drug_meta[drug_meta['improve_chem_id'] == response]['canSMILES'].values.tolist()[0])
+    mols = smiles_to_molecules(smiles_list)
     feat_list = rdkit_mols_to_dc_features(mols)
     save_hickles(feat_list, drug_ids, save_dir)
     return None
-    
+
 def improve_utils_to_hickle(drug_response_df: pd.DataFrame, output_dir):
     """
     Convert the PubChem CIDs in improve_utils returned DFs to DeepChem graphs, and save the graphs as hickle files. 
@@ -105,20 +91,18 @@ def improve_utils_to_hickle(drug_response_df: pd.DataFrame, output_dir):
         print('Column "improve_chem_id" not found in the passed response DF. The available columns are ', drug_response_df.columns)
         return None
 
-    mols = cids_to_rdkit_molecules(cid_list)
+    mols = smiles_to_molecules(cid_list)
     feat_list = rdkit_mols_to_dc_features(mols)
     save_hickles(feat_list, impr_ids, os.path.join(output_dir, "drug/drug_graph_feat/"))
     return None
 
-
-#%% Test code
 def test_same_graph():
     import networkx as nx
     # test the generated graph is the same to the provided, using network X
     provided = os.listdir("data/drug/drug_graph_feat")
     cid =  random.choice(provided).strip(".hkl")
     print(cid)
-    mols = cids_to_rdkit_molecules([cid])
+    mols = smiles_to_molecules([cid])
     feat = rdkit_mols_to_dc_features(mols)[0]
     f0, a0, d0 = feat.atom_features, feat.canon_adj_list, feat.deg_list
     f1, a1, d1 = hickle.load("data/drug/drug_graph_feat/{}.hkl".format(cid))
@@ -152,7 +136,7 @@ def test_improve_to_hickle():
     y_col_name = "auc"
     x = load_single_drug_response_data_v2(
         source=source_data_name,
-        split_file_name=f"{source_data_name}_split_{split}_val.txt",
+        split_file_name=f"{source_data_name}_split_{split}_train.txt",
         y_col_name=y_col_name
         )
     improve_utils_to_hickle(x, output_dir="data_new/drug/test")
@@ -160,7 +144,6 @@ def test_improve_to_hickle():
 
 if __name__ == "__main__":
     # Run test code. 
-    test_improve_to_hickle()
-    test_same_graph()
+    # test_improve_to_hickle()
+    # test_same_graph()
     meta_file_to_hickle()
-

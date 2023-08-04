@@ -6,8 +6,9 @@
     The idea is to use the new dataset for training the model, using the same 
     functions provided by ANL for loading the data. 
     
+    NOTE: REMOVE HARD CODED STRINGS.
     """
-    
+
 ## Importing base libraries:
 import candle
 import pandas as pd
@@ -18,7 +19,6 @@ import hickle as hkl
 import improve_utils as iu
 import scipy.sparse as sp
 import random
-import warnings
 import json
 import tensorflow as tf
 
@@ -84,14 +84,19 @@ Max_atoms = PARAMS["max_atoms"]
 
 
 
-def MetadataGenerate_version_IMPROVE(path = './data/IMPROVE_CCLE/drug/drug_graph_feat/',
-                                     drug_path = './data/IMPROVE_CCLE/drug/drug_graph_feat/',
-                                     PPI_file = './data/IMPROVE_CCLE/PPI/PPI_network_new.txt', 
-                                     selected_info_common_genes = './data/IMPROVE_CCLE/gene_list.txt'):
+def MetadataGenerate_version_IMPROVE(path = './data_new/IMPROVE_CCLE/drug/drug_graph_feat/',
+                                     drug_path = './data_new/drug/drug_graph_feat/',
+                                     PPI_file = './data_new/IMPROVE_test/PPI/PPI_network_new.txt', 
+                                     selected_info_common_genes = './data/IMPROVE_CCLE/gene_list.txt',
+                                     source = 'CTRPv2', 
+                                     split_file_train = 'CTRPv2_split_0_train.txt',
+                                     split_file_test = 'CTRPv2_split_0_test.txt', 
+                                     split_file_val = 'CTRPv2_split_0_val.txt', 
+                                     target = 'auc'):
     
-    df_train = iu.load_single_drug_response_data_v2(source = 'CCLE', split_file_name = 'CCLE_split_0_train.txt', y_col_name='auc1')
-    df_test = iu.load_single_drug_response_data_v2(source = 'CCLE', split_file_name = 'CCLE_split_0_test.txt', y_col_name='auc1')
-    df_val = iu.load_single_drug_response_data_v2(source = 'CCLE', split_file_name = 'CCLE_split_0_val.txt', y_col_name='auc1')
+    df_train = iu.load_single_drug_response_data_v2(source = source, split_file_name = split_file_train, y_col_name=target)
+    df_test = iu.load_single_drug_response_data_v2(source = source, split_file_name = split_file_test, y_col_name=target)
+    df_val = iu.load_single_drug_response_data_v2(source = source, split_file_name = split_file_val, y_col_name=target)
     
     # Sorting columns and removing source column, to be like the data_idx format
     df_train = df_train[['improve_sample_id', 'improve_chem_id', 'auc1']].values.tolist()
@@ -109,10 +114,10 @@ def MetadataGenerate_version_IMPROVE(path = './data/IMPROVE_CCLE/drug/drug_graph
     # common_genes = pd.read_csv(selected_info_common_genes, sep = '\t', header = None).values.squeeze().tolist()
     PPI_net = pd.read_csv(PPI_file, sep = '\t', header = None)
 
-    list_omics = os.listdir('./data/IMPROVE_CCLE/omics_data/')
+    list_omics = os.listdir('./data_new/IMPROVE_test/omics_data/')
     common_genes = []
     for each in list_omics:
-        df = pd.read_csv('./data/IMPROVE_CCLE/omics_data/' + each, sep = ',', index_col = 0)
+        df = pd.read_csv('./data_new/IMPROVE_test/omics_data/' + each, sep = ',', index_col = 0)
         # Give me the index of df
         common_genes.append(df.index.tolist())
     common_genes = list(set.intersection(*map(set, common_genes)))
@@ -120,9 +125,7 @@ def MetadataGenerate_version_IMPROVE(path = './data/IMPROVE_CCLE/drug/drug_graph
     # Removing from PPI_net the genes that are not in common_genes
     PPI_net = PPI_net[PPI_net[0].isin(common_genes)]
     PPI_net = PPI_net[PPI_net[1].isin(common_genes)]
-    print(PPI_net.shape)
     
-    print(len(common_genes))
     idx_dic = {}
     for index, item in enumerate(common_genes):
         idx_dic[item] = index
@@ -174,6 +177,8 @@ def CalculateGraphFeat(feat_mat,adj_list,israndom=False):
     if israndom:
         feat = np.random.rand(Max_atoms,feat_mat.shape[-1])
         adj_mat[feat_mat.shape[0]:,feat_mat.shape[0]:] = random_adjacency_matrix(Max_atoms-feat_mat.shape[0]) 
+    # print(feat_mat.shape)
+    # print(feat.shape)
     feat[:feat_mat.shape[0],:] = feat_mat  
     for i in range(len(adj_list)):
         nodes = adj_list[i]
@@ -212,13 +217,12 @@ def FeatureExtract(data_idx, drug_feature,
     target = np.zeros(nb_instance, dtype='float32')
     cellline_drug_pair = []
     common_cell_lines = [item[0] for item in data_idx]
-    print(type(common_genes))
     
     # with open(selected_info_common_genes) as f:
     #     common_genes = [item.strip() for item in f.readlines()]
     dic_cell_line_feat = {}
     for each in common_cell_lines:
-        dic_cell_line_feat[each] = pd.read_csv('./data/IMPROVE_CCLE/omics_data/' + each + '.csv', index_col=0).values 
+        dic_cell_line_feat[each] = pd.read_csv('./data_new/IMPROVE_test/omics_data/' + each + '.csv', index_col=0).values 
     for idx in range(nb_instance):
         cell_line_id, pubchem_id, ln_IC50 = data_idx[idx]
         cellline_drug_tmp = cell_line_id + "_" + pubchem_id
@@ -259,8 +263,10 @@ class MyCallback(Callback):
         pcc_val = pearsonr(self.y_val, y_pred_val[:,0])[0]
         spearman_val = spearman(self.y_val, y_pred_val[:,0])
         rmse_val = rmse(self.y_val, y_pred_val[:,0])
-
-        val_scores = {"val_loss": float(val_loss[0]), "pcc": float(pcc_val), "scc": float(spearman_val), "rmse": float(rmse_val)}
+        rsquared = r2_score(self.y_val, y_pred_val[:,0])
+        val_scores = {"val_loss": float(val_loss[0]), "pcc": float(pcc_val), 
+                      "scc": float(spearman_val), "rmse": float(rmse_val),
+                      "rsquared": float(rsquared)}
 
         print("\nIMPROVE_RESULT val_loss:\t{}\n".format(val_scores["val_loss"]))
         print("scores.json saved at", self.improve_score_path)
@@ -296,8 +302,8 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     ckpt_directory = params["ckpt_directory"]
     batch_size = params["batch_size"]
     nb_epoch = params["epochs"]
-    result_file_path = pj(ckpt_directory, 'best_DualGCNmodel.h5')
-    result_file_path_callback = pj(ckpt_directory, 'MyBestDualGCNModel.h5')
+    result_file_path = pj(ckpt_directory, 'best_DualGCNmodel_new.h5')
+    result_file_path_callback = pj(ckpt_directory, 'MyBestDualGCNModel_new.h5')
     ckpt_save_best = params["ckpt_save_best"]
     ckpt_save_weights_only = params["ckpt_save_weights_only"]
     ckpt_save_best_metric = params["ckpt_save_best_metric"]
@@ -308,7 +314,7 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
     model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics)
     callbacks = [ModelCheckpoint(result_file_path, monitor=ckpt_save_best_metric, save_best_only=ckpt_save_best, save_weights_only=ckpt_save_weights_only), 
-                 MyCallback(validation_data=validation_data, result_file_path=result_file_path_callback, improve_score_path=improve_score_path, patience=20)]
+                 MyCallback(validation_data=validation_data, result_file_path=result_file_path_callback, improve_score_path=improve_score_path, patience = 15)]
     # By default Keras' model.fit() returns a History callback object.
     history = model.fit(x=X_train,y=Y_train,batch_size=batch_size,epochs=nb_epoch, validation_data=validation_data,callbacks=callbacks)
     return model, history
@@ -366,7 +372,7 @@ def ModelEvaluate(model, X_val, Y_val, data_test_idx_current, eval_batch_size=32
 
 
 #%% Run routine: 
-celline_feature_folder = './data/IMPROVE_CCLE/omics_data/'
+celline_feature_folder = './data_new/IMPROVE_test/omics_data/'
 def run(params):
     print("In Run Function:\n")
     ckpt_directory = params["ckpt_directory"]
@@ -394,7 +400,11 @@ def run(params):
     X_train_cellline_feat_mean = np.mean(X_train_cellline_feat, axis=0)
     X_train_cellline_feat_std = np.std(X_train_cellline_feat, axis=0)
     X_train_cellline_feat = (X_train_cellline_feat - X_train_cellline_feat_mean) / X_train_cellline_feat_std
-    # X_train = [X_train_drug_feat,X_train_drug_adj,X_train_cellline_feat,np.array([ppi_adj for i in range(X_train_drug_feat.shape[0])])]
+    # Reduce the ram usage:
+    X_train_cellline_feat = X_train_cellline_feat.astype('float16')
+    X_train_drug_feat = X_train_drug_feat.astype('float16')
+    X_train_drug_adj = X_train_drug_adj.astype('float16')
+    ppi_adj = ppi_adj.astype('float16')
     X_train = [X_train_drug_feat, X_train_drug_adj, X_train_cellline_feat,
                 np.tile(ppi_adj, (X_train_drug_feat.shape[0], 1, 1))]
 
@@ -453,3 +463,17 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+"""
+Overall PCC: 0.5869
+Overall RMSE: 0.1360
+Overall Spearman: 0.4247
+Overall R2: 0.2889
+Evaluation finished!
+Done.
+
+real    127m6.168s
+user    584m57.663s
+sys     399m15.146s
+"""
+

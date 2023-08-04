@@ -121,7 +121,7 @@ def preprocess_omics_data(output_dir):
 if __name__ == '__main__':
     # Measure Time
     start = t()
-    preprocess_omics_data("./data/IMPROVE_test/")
+    preprocess_omics_data("./data_new/IMPROVE_test/")
     end = t()
     print(f"Time: {end - start} seconds")
     
