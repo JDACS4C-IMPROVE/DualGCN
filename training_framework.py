@@ -92,11 +92,16 @@ def MetadataGenerate_version_IMPROVE(path = './data_new/IMPROVE_CCLE/drug/drug_g
                                      split_file_train = 'CTRPv2_split_0_train.txt',
                                      split_file_test = 'CTRPv2_split_0_test.txt', 
                                      split_file_val = 'CTRPv2_split_0_val.txt', 
-                                     target = 'auc'):
+                                     target = 'auc',
+                                     if_train = True):
+    
+    
+    
     
     df_train = iu.load_single_drug_response_data_v2(source = source, split_file_name = split_file_train, y_col_name=target)
-    df_test = iu.load_single_drug_response_data_v2(source = source, split_file_name = split_file_test, y_col_name=target)
     df_val = iu.load_single_drug_response_data_v2(source = source, split_file_name = split_file_val, y_col_name=target)
+    df_test = iu.load_single_drug_response_data_v2(source = source, split_file_name = split_file_test, y_col_name=target)
+
     
     # Sorting columns and removing source column, to be like the data_idx format
     df_train = df_train[['improve_sample_id', 'improve_chem_id', 'auc1']].values.tolist()

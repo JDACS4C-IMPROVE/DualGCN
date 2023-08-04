@@ -63,7 +63,7 @@ def meta_file_to_hickle(f_drug_meta_data="csa_data/raw_data/x_data/drug_SMILES.t
     output: save hickle files to the save_dir. 
         Each hickle file is named by the drug ID, as <drug_id>.hkl, and contains feat_mat, adj_list, degree_list.
     """
-    responses_train = load_single_drug_response_data_v2(source = 'CTRPv2', split_file_name='CTRPv2_split_0_train.txt', y_col_name='auc')
+    responses_train = load_single_drug_response_data_v2(source = 'GDSCv2', split_file_name='GDSCv2_all.txt', y_col_name='auc')
     drug_meta = pd.read_csv(f_drug_meta_data, sep="\t")
     drug_ids = responses_train['improve_chem_id'].unique()  # Make sure the meta file contains column named "PubCHEM"
     # drug_ids = drug_meta.drug_id.values  # Make sure the meta file contains column named "drug_id"
@@ -132,7 +132,7 @@ def test_same_graph():
 
 def test_improve_to_hickle():
     split = 0
-    source_data_name = "CTRPv2"
+    source_data_name = "CCLE"
     y_col_name = "auc"
     x = load_single_drug_response_data_v2(
         source=source_data_name,
