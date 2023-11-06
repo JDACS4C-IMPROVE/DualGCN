@@ -148,7 +148,7 @@ def test_same_graph():
 
 def test_improve_to_hickle():
     split = 0
-    source_data_name = "CTRPv2"
+    source_data_name = "CCLE"
     y_col_name = "auc"
     x = load_single_drug_response_data_v2(
         source=source_data_name,
