@@ -13,10 +13,10 @@ from code.layers.graph import GraphConv
 # from scipy.stats import pearsonr
 # from scipy.stats import spearmanr
 
-data_train_idx, data_test_idx, data_val_idx, drug_feature, ppi_adj_info, common_genes = MetadataGenerate_version_IMPROVE(source = 'GDSCv2',
-                                                                                                                         split_file_train= 'GDSCv2_all.txt',
-                                                                                                                         split_file_test = 'GDSCv2_all.txt',
-                                                                                                                         split_file_val = 'GDSCv2_all.txt',
+data_train_idx, data_test_idx, data_val_idx, drug_feature, ppi_adj_info, common_genes = MetadataGenerate_version_IMPROVE(source = 'CTRPv2',
+                                                                                                                         split_file_train= 'CTRPv2_split_0_train.txt',
+                                                                                                                         split_file_test = 'CTRPv2_split_0_test.txt',
+                                                                                                                         split_file_val = 'CTRPv2_split_0_val.txt',
                                                                                                                          if_train = False)
 ppi_adj = CelllineGraphAdjNorm(ppi_adj_info, common_genes)
 ckpt_dir = './checkpoints/'
