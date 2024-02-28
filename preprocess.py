@@ -14,7 +14,7 @@ Timing recorded with $time on Lambda0
 """
     
 from process_gen_mol_graph import improve_utils_to_hickle
-from processing_new_data import preprocess_omics_data
+from model_utils.gene_information import preprocess_omics_data
 from improve_utils import load_single_drug_response_data, load_single_drug_response_data_v2
 
 source = "CTRPv2"  # Can be turned into CLI args later. 
