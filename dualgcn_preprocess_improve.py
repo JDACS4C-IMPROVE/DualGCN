@@ -17,6 +17,7 @@ from improve import framework as frm
 from improve import drug_resp_pred as drp
 # Model related:
 from model_utils import gene_information as gi
+from model_utils.drug_utils import smiles_to_molecules, rdkit_mols_to_dc_features, save_hickles
 # import rdkit
 import deepchem as dc
 import hickle as hkl 
@@ -146,7 +147,7 @@ smi.rename(columns={'index': 'improve_chem_id'}, inplace=True)
 # print(smi)
 
 # Save files on GDSCv1-CCLE/split0
-# gi.preprocess_omics_data(params['ml_data_outdir'], ge, cn)
+gi.preprocess_omics_data(params['ml_data_outdir'], ge, cn)
 
 # -------------------------------------------
 # Construct ML data for every stage (train, val, test)
@@ -167,38 +168,6 @@ print("\nLoad responses.")
 # NOTE  : This is being done for testing, afterwards, we can send it to a function in model_utils. 
 # NOTE 2: Try to document it properly.
 # --------------------------------------------------------------------------------------
-def smiles_to_molecules(smiles_list : list) -> list:
-    """The following function aims to convert SMILES to RDKit molecules. And save all the molecules in a list.
-    """
-    molecules = []
-    for smile in smiles_list:
-        molecule = Chem.MolFromSmiles(smile)
-        molecules.append(molecule)
-    
-    return molecules
-
-def rdkit_mols_to_dc_features(mols: list) -> list:
-    """
-    RDKit mols to DeepChem features
-
-    The rdkit_mols_to_dc_features function takes a list of RDKit molecules and returns a list of DeepChem features. 
-    It uses the ConvMolFeaturizer class from the DeepChem package to extract features from the molecules.
-    """
-    ft = dc.feat.ConvMolFeaturizer()
-    feature_list = ft.featurize(mols)
-    return feature_list
-
-def save_hickles(feature_list, drug_id_list, save_dir) -> None:
-    # Create the directory if it doesn't exist
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    for ii in range(len(feature_list)):
-        ft = feature_list[ii]
-        obj = (ft.atom_features, ft.canon_adj_list, ft.deg_list)
-        f_name = os.path.join(save_dir, str(drug_id_list[ii]) + ".hkl")
-        hkl.dump(obj, f_name)
-    
-    return None 
         
 for stage, split_file in stages.items():
     dr = drp.DrugResponseLoader(params, split_file = split_file, verbose = True)
@@ -220,8 +189,8 @@ for stage, split_file in stages.items():
     # Save the features in a directory
     save_hickles(features, list_drugs, params['ml_data_outdir'] + '/drug_features/')
     # print shape and head
-    # print(f"Stage: {stage}")
-    # print(df_response.shape)
-    # print(df_response.head())
+    print(f"Stage: {stage}")
+    print(df_response.shape)
+    print(df_response.head())
     
     # frm.save_stage_ydf(df_response, params, stage)
