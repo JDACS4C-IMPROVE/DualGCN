@@ -31,6 +31,9 @@ log_interval = 20
 cuda_name = "cuda:7"
 # Model definition
 max_atoms = 230
+drug_path = "./ml_data/GDSCv1-CCLE/split_0/drug_features/"
+ppi_path = "./ml_data/GDSCv1-CCLE/split_0_PPI/PPI_network_new.txt"
+omics_path = "./ml_data/GDSCv1-CCLE/split_0_omics_data/"
 
 use_gexpr = True
 use_cnv = True
