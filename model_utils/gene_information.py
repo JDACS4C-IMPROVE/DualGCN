@@ -19,7 +19,7 @@ PPI network.
 """
 
 import os
-import improve_utils as iu
+# import improve_utils as iu
 import pandas as pd
 # from tqdm import tqdm
 from time import time as t
