@@ -25,26 +25,36 @@ All the outputs from this train script are saved in params["model_outdir"].
    
 This script is based on the GraphDRP code made by Dr. Partin.
 """
+
+# Main Python (system) libraries
+import json
 import os
-import hickle as hkl
-import improve.framework as frm
-from improve.metrics import compute_metrics
-import numpy as np
-import pandas as pd
 import random
 import warnings
 from math import sqrt
-from pathlib import Path
-from scipy import stats
-import json
-from keras.callbacks import ModelCheckpoint, Callback, EarlyStopping, History
 from os.path import join as pj
+from pathlib import Path
+
+# Third-party Python libraries
+import hickle as hkl
+import numpy as np
+import pandas as pd
+from keras.callbacks import Callback, EarlyStopping, History, ModelCheckpoint
 from keras.optimizers import Adam
+from scipy import stats
+from scipy.stats import pearsonr, spearmanr
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Custom and IMPROVE libraries: 
+import improve.framework as frm
 from code.model import KerasMultiSourceDualGCNModel
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
+from improve.metrics import compute_metrics
+from improve import drug_resp_pred as drp
+from model_utils.feature_extraction import CelllineGraphAdjNorm, FeatureExtract
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+# Defined auxiliary functions:
 def rmse(y, f):
     rmse = sqrt(((y - f)**2).mean(axis=0))
     return rmse
@@ -56,19 +66,12 @@ def mse(y, f):
 def spearman(y, f):
     rs = stats.spearmanr(y, f)[0]
     return rs
-from sklearn.metrics import mean_squared_error, r2_score
 
-# IMPROVE/CANDLE:
-from improve import drug_resp_pred as drp
-
-from model_utils.feature_extraction import CelllineGraphAdjNorm, FeatureExtract
-
-
+# The following required information is stored in the params dictionary: 
 # [Req] List of metrics names to be compute performance scores
 metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
 # [Req] App-specific params (App: monotherapy drug response prediction)
-# Currently, there are no app-specific args for the train script.
 app_train_params = []
 model_train_params = []
 train_params = app_train_params + model_train_params
@@ -76,63 +79,13 @@ train_params = app_train_params + model_train_params
 filepath = Path(__file__).resolve().parent
 print(filepath)
 
-app_preproc_params = [
-    # # These arg should be specified in the [modelname]_default_model.txt:
-    # # y_data_files, x_data_canc_files, x_data_drug_files
-    # {"name": "y_data_files", # default
-    #  "type": str,
-    #  "help": "List of files that contain the y (prediction variable) data. \
-    #          Example: [['response.tsv']]",
-    # },
-    # {"name": "x_data_canc_files", # [Req]
-    #  "type": str,
-    #  "help": "List of feature files including gene_system_identifer. Examples: \n\
-    #          1) [['cancer_gene_expression.tsv', ['Gene_Symbol']]] \n\
-    #          2) [['cancer_copy_number.tsv', ['Ensembl', 'Entrez']]].",
-    # },
-    # {"name": "x_data_drug_files", # [Req]
-    #  "type": str,
-    #  "help": "List of feature files. Examples: \n\
-    #          1) [['drug_SMILES.tsv']] \n\
-    #          2) [['drug_SMILES.tsv'], ['drug_ecfp4_nbits512.tsv']]",
-    # },
-    # {"name": "canc_col_name",
-    #  "default": "improve_sample_id", # default
-    #  "type": str,
-    #  "help": "Column name in the y (response) data file that contains the cancer sample ids.",
-    # },
-    # {"name": "drug_col_name", # default
-    #  "default": "improve_chem_id",
-    #  "type": str,
-    #  "help": "Column name in the y (response) data file that contains the drug ids.",
-    # },
-
-]
+app_preproc_params = []
 
 # [Req] App-specific params (App: monotherapy drug response prediction)
-# Currently, there are no app-specific args for the train script.
 app_train_params = []
 
-model_train_params = [
-    # {"name": "model_arch",
-    #  "default": "GINConvNet",
-    #  "choices": ["GINConvNet", "GATNet", "GAT_GCN", "GCNNet"],
-    #  "type": str,
-    #  "help": "Model architecture to run."},
-    # {"name": "log_interval",
-    #  "action": "store",
-    #  "type": int,
-    #  "help": "Interval for saving o/p"},
-    # {"name": "cuda_name",
-    #  "action": "store",
-    #  "type": str,
-    #  "help": "Cuda device (e.g.: cuda:0, cuda:1."},
-    # {"name": "learning_rate",
-    #  "type": float,
-    #  "default": 0.0001,
-    #  "help": "Learning rate for the optimizer."
-    # },
-]
+# Model specific params
+model_train_params = []
 
 # [Req] List of metrics names to be compute performance scores
 metrics_list = ["mse", 
@@ -142,6 +95,7 @@ metrics_list = ["mse",
                 "r2"]  
 
 additional_definitions = app_train_params + model_train_params
+
 params = frm.initialize_parameters(
         filepath,
         default_model="params_cs.txt",
@@ -388,9 +342,18 @@ def main(params):
                                   eval_batch_size=batch_size)
     print('Evaluation finished!')
     
-    frm.store_predictions_df(params, y_true = Y_test, y_pred = Y_pred, stage = 'val', outdir = modelpath, metrics = metrics_list)
+    frm.store_predictions_df(params,
+                             y_true = Y_test,
+                             y_pred = Y_pred,
+                             stage = 'val',
+                             outdir = modelpath)
     
-    val_scores = frm.compute_performance_scores(params, y_true = Y_test, y_pred = Y_pred, stage = 'val', outdir = modelpath, metrics = metrics_list)
+    val_scores = frm.compute_performance_scores(params,
+                                                y_true = Y_test,
+                                                y_pred = Y_pred,
+                                                stage = 'val',
+                                                outdir = modelpath,
+                                                metrics = metrics_list)
     print(val_scores)
     print("Done!")
     return None

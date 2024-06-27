@@ -8,8 +8,7 @@
 # arg 2 CANDLE_CONFIG
 
 ### Path and Name to your CANDLEized model's main Python script###
-conda activate DualGCN36GPU
-export PYTHONPATH=$PYTHONPATH:/homes/ac.cesarasa/Project_DualGCN/IMPROVE
+
 # e.g. CANDLE_MODEL=graphdrp_preprocess.py
 CANDLE_MODEL_SCRIPT=dualgcn_preprocess_improve.py
 
