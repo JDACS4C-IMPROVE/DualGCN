@@ -3,7 +3,9 @@ import numpy as np
 import pandas as pd
 import random
 import scipy.sparse as sp
+from tqdm import tqdm
 
+Max_atoms = 230
 def NormalizeAdj(adj):
     adj = adj + np.eye(adj.shape[0])
     d = sp.diags(np.power(np.array(adj.sum(1)), -0.5).flatten(), 0).toarray()
@@ -19,12 +21,14 @@ def random_adjacency_matrix(n):
             matrix[j][i] = matrix[i][j]
     return matrix
 
-def CalculateGraphFeat(feat_mat, adj_list, Max_atoms, israndom=False):
+def CalculateGraphFeat(feat_mat, adj_list, params, israndom=False):
     assert feat_mat.shape[0] == len(adj_list)
-    feat = np.zeros((Max_atoms,feat_mat.shape[-1]),dtype='float32')
-    adj_mat = np.zeros((Max_atoms,Max_atoms),dtype='float32')
+    # print(f'Debugging: {feat_mat.shape[-1]}')
+    # print(f'Debugging: {Max_atoms}')
+    feat = np.zeros((Max_atoms,feat_mat.shape[-1]),dtype='float16')
+    adj_mat = np.zeros((Max_atoms,Max_atoms),dtype='float16')
     if israndom:
-        feat = np.random.rand(Max_atoms,feat_mat.shape[-1])
+        feat = np.random.rand(Max_atoms, feat_mat.shape[-1])
         adj_mat[feat_mat.shape[0]:,feat_mat.shape[0]:] = random_adjacency_matrix(Max_atoms-feat_mat.shape[0]) 
     # print(feat_mat.shape)
     # print(feat.shape)
@@ -42,7 +46,7 @@ def CalculateGraphFeat(feat_mat, adj_list, Max_atoms, israndom=False):
     adj_mat[len(adj_list):,len(adj_list):] = norm_adj_2
     return [feat,adj_mat]
 
-def CelllineGraphAdjNorm(ppi_adj_info, common_genes, **kwargs):
+def CelllineGraphAdjNorm(ppi_adj_info, common_genes, params, **kwargs):
     # There is a problem here. IndexError: index 694 is out of bounds for axis 1 with size 689 Debug it with the jupyter Notebook. 
     # I think it is because the ppi_adj_info is not the same as the selected_info_common_genes.
     # with open(selected_info_common_genes) as f:
@@ -66,13 +70,18 @@ def FeatureExtract(data_idx, drug_feature,
     target = np.zeros(nb_instance, dtype='float32')
     cellline_drug_pair = []
     common_cell_lines = [item[0] for item in data_idx]
-    print(common_cell_lines)
+    print(type(common_cell_lines))
+    # print(common_cell_lines)
     # with open(selected_info_common_genes) as f:
     #     common_genes = [item.strip() for item in f.readlines()]
     dic_cell_line_feat = dict()
-    for each in common_cell_lines:
+    for each in tqdm(common_cell_lines):
+        # print(each)
+        # print(params['omics_path'])
+        # # print(df_vals)
+        # break
         dic_cell_line_feat[each] = pd.read_csv(params['omics_path'] + each + '.csv', index_col=0).values 
-    for idx in range(nb_instance):
+    for idx in tqdm(range(nb_instance)):
         cell_line_id, pubchem_id, ln_IC50 = data_idx[idx]
         cellline_drug_tmp = cell_line_id + "_" + pubchem_id
         cellline_drug_pair.append(cellline_drug_tmp)

@@ -3,7 +3,7 @@
 
 # Model training
 model_name = "dualgcn"
-epochs = 5 # default 500 in the paper
+epochs = 1 # default 500 in the paper
 batch_size = 8
 rng_seed = 123
 n_fold = 100

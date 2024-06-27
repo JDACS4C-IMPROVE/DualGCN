@@ -19,22 +19,24 @@ val_ml_data_dir = "./ml_data/GDSCv1-CCLE/split_0"
 model_outdir = "./out_models/GDSCv1/split_0"
 model_file_name = "model"
 model_file_format = ".pt"
-epochs = 10
+epochs = 1
 batch_size = 8
 val_batch = 8
 loss = "mean_squared_error"
 early_stop_metric = "mse"
 patience = 20
 ckpt_save_interval = 5
+n_fold = 100
+learning_rate = 0.0001
 model_arch = "GCN"
 log_interval = 20
 cuda_name = "cuda:7"
 # Model definition
-max_atoms = 230
+Max_atoms = 230
 drug_path = "./ml_data/GDSCv1-CCLE/split_0/drug_features/"
 ppi_path = "./ml_data/GDSCv1-CCLE/split_0_PPI/PPI_network_new.txt"
 omics_path = "./ml_data/GDSCv1-CCLE/split_0_omics_data/"
-
+metrics = ['mse']
 use_gexpr = True
 use_cnv = True
 regression = True
