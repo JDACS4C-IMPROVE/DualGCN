@@ -342,6 +342,13 @@ def main(params):
                                   eval_batch_size=batch_size)
     print('Evaluation finished!')
     
+    # Reshape into a single column both Y_test and Y_pred
+    print(type(Y_test))
+    print(type(Y_pred))
+    Y_test = Y_test.reshape(-1, 1).flatten()
+    Y_pred = Y_pred.reshape(-1, 1).flatten()
+    # Y_test_1d = Y_test.flatten()  # Convert Y_test to 1-dimensional if it's not already
+    # Y_pred_1d = Y_pred.flatten()  # Convert Y_pred to 1-dimensional if it's not already
     frm.store_predictions_df(params,
                              y_true = Y_test,
                              y_pred = Y_pred,

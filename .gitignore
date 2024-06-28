@@ -17,3 +17,4 @@ csa_data/*
 data/IMPROVE_CCLE/*
 ml_data/*
 *.ipynb
+*.simg
