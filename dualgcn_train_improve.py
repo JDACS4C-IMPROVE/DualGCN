@@ -42,93 +42,111 @@ import pandas as pd
 from keras.callbacks import Callback, EarlyStopping, History, ModelCheckpoint
 from keras.optimizers import Adam
 from scipy import stats
-from scipy.stats import pearsonr, spearmanr
+# from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_squared_error, r2_score
 
-# Custom and IMPROVE libraries: 
+# [Req] IMPROVE/CANDLE imports
 import improve.framework as frm
-from code.model import KerasMultiSourceDualGCNModel
 from improve.metrics import compute_metrics
 from improve import drug_resp_pred as drp
+
+# Custom libraries:
+from code.model import KerasMultiSourceDualGCNModel
 from model_utils.feature_extraction import CelllineGraphAdjNorm, FeatureExtract
+
+# [Req] Imports from preprocess script
+from dualgcn_preprocess_improve import preprocess_parameters
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Defined auxiliary functions:
-def rmse(y, f):
-    rmse = sqrt(((y - f)**2).mean(axis=0))
-    return rmse
+filepath = Path(__file__).resolve().parent # [Req]
 
-def mse(y, f):
-    mse = ((y - f)**2).mean(axis=0)
-    return mse
-
-def spearman(y, f):
-    rs = stats.spearmanr(y, f)[0]
-    return rs
 
 # The following required information is stored in the params dictionary: 
-# [Req] List of metrics names to be compute performance scores
-metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
-# [Req] App-specific params (App: monotherapy drug response prediction)
-app_train_params = []
+
+# ---------------------
+# [Req] Parameter lists
+# ---------------------
+# Two parameter lists are required:
+# 1. app_train_params
+# 2. model_train_params
+# 
+# The values for the parameters in both lists should be specified in a
+# parameter file that is passed as default_model arg in
+# frm.initialize_parameters().
+
+# 1. App-specific params (App: monotherapy drug response prediction)
+# Currently, there are no app-specific params for this script.
+app_train_params   = []
 model_train_params = []
 train_params = app_train_params + model_train_params
+
+# [Req] List of metrics names to be compute performance scores
+metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]  
 
 filepath = Path(__file__).resolve().parent
 print(filepath)
 
-app_preproc_params = []
+# additional_definitions = train_params + preprocess_params
 
-# [Req] App-specific params (App: monotherapy drug response prediction)
-app_train_params = []
+# params = frm.initialize_parameters(
+#         filepath,
+#         default_model="params_cs.txt",
+#         additional_definitions=additional_definitions,
+#         required=None,
+#     )
+# frm.create_outdir(outdir=params["model_outdir"])
 
-# Model specific params
-model_train_params = []
 
-# [Req] List of metrics names to be compute performance scores
-metrics_list = ["mse", 
-                "rmse", 
-                "pcc", 
-                "scc", 
-                "r2"]  
-
-additional_definitions = app_train_params + model_train_params
-
-params = frm.initialize_parameters(
+def initialize_parameters():
+    # preprocess_params is a global variable from the preprocess script
+    additional_definitions = preprocess_parameters + train_params
+    params = frm.initialize_parameters(
         filepath,
         default_model="params_cs.txt",
         additional_definitions=additional_definitions,
         required=None,
     )
-frm.create_outdir(outdir=params["model_outdir"])
+    return params
 
-modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
-train_data_fname = frm.build_ml_data_name(params, stage="train")  # [Req]
-val_data_fname = frm.build_ml_data_name(params, stage="val")  # [Req]
-
-# print("train_data_fname:", train_data_fname)
-# print("val_data_fname:", val_data_fname)
 def MetadataFramework(params):
-    # print("Loading Training Data")swd
+    
+    # ------------------------------------------------------
+    # [Req] Create output dir and build model path
+    # ------------------------------------------------------
+    # Create output dir for trained model, val set predictions, val set
+    # performance scores
+    frm.create_outdir(outdir=params["model_outdir"])
+    
+    # Build model path
+    modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
+    
+    # ------------------------------------------------------
+    # [Req] Create data names for train and val sets
+    # ------------------------------------------------------
+    train_data_fname = frm.build_ml_data_name(params, stage="train")  # [Req]
+    val_data_fname = frm.build_ml_data_name(params, stage="val")  # [Req]
+    
+    # DualGCN-specific: build Metadata framework.
+    # Load csv files for train, val, and test sets
     df_train = pd.read_csv(params['train_ml_data_dir'] + '/' + 'train_y_data.csv')
-    # print("Loading Validation Data")
     df_val = pd.read_csv(params['val_ml_data_dir'] + '/' + 'val_y_data.csv')
-    # print("Loading Testing Data")
     df_test = pd.read_csv(params['test_ml_data_dir'] + '/' + 'test_y_data.csv')
 
+    # Covnert the dataframes to lists
     df_train = df_train[['improve_sample_id', 'improve_chem_id', 'auc']].values.tolist()
     df_test = df_test[['improve_sample_id', 'improve_chem_id', 'auc']].values.tolist()
     df_val = df_val[['improve_sample_id', 'improve_chem_id', 'auc']].values.tolist()
 
     drug_feature = {}
+    # Save the name of the drug as the word for a dictionary
     for each in os.listdir(params['drug_path']):
         feat_mat,adj_list,degree_list = hkl.load(params['drug_path'] + each)
         # Save the name of the drug "each" as the word for the dictionary
-        
         drug_feature[each.split('.')[0]] = [feat_mat,adj_list,degree_list]
 
+    # Build the PPI network from the original file
     PPI_net = pd.read_csv(params['ppi_path'], sep = '\t', header=None)
     list_omics = os.listdir(params['omics_path'])
     common_genes = []
@@ -146,8 +164,7 @@ def MetadataFramework(params):
     for index, item in enumerate(common_genes):
         idx_dic[item] = index
     ppi_adj_info = [[] for item in common_genes] 
-    # ppi_adj_info = pd.read_csv(ppi_info_file, sep = '\t', header = None)
-    # print(ppi_adj_info.shape)
+
     for line in PPI_net.values.tolist():
         gene1, gene2 = line[0], line[1]
         # print(gene1, gene2)
@@ -186,13 +203,14 @@ class MyCallback(Callback):
         # IMPROVE supervisor HPO
         val_loss = self.model.evaluate(self.x_val, self.y_val)
         y_pred_val = self.model.predict(self.x_val)
-        pcc_val = pearsonr(self.y_val, y_pred_val[:,0])[0]
-        spearman_val = spearman(self.y_val, y_pred_val[:,0])
-        rmse_val = rmse(self.y_val, y_pred_val[:,0])
-        rsquared = r2_score(self.y_val, y_pred_val[:,0])
-        val_scores = {"val_loss": float(val_loss[0]), "pcc": float(pcc_val), 
-                      "scc": float(spearman_val), "rmse": float(rmse_val),
-                      "rsquared": float(rsquared)}
+        
+        val_scores = frm.compute_performace_scores(params,
+                                                y_true = self.y_val,
+                                                y_pred= y_pred_val[:,0],
+                                                stage = 'val',
+                                                outdir = params["model_outdir"],
+                                                metrics = metrics_list)
+        
 
         print("\nIMPROVE_RESULT val_loss:\t{}\n".format(val_scores["val_loss"]))
         print("scores.json saved at", self.improve_score_path)
@@ -223,7 +241,7 @@ def on_epoch_end(self, epoch, logs={}):
 def ModelTraining(model, X_train, Y_train, validation_data, 
                   params):
     learn_rate = params["learning_rate"]
-    ckpt_directory = params["ckpt_directory"]
+    ckpt_directory = params["output_dir"]
     batch_size = params["batch_size"]
     nb_epoch = params["epochs"]
     result_file_path = pj(ckpt_directory, 'best_DualGCNmodel_new.h5')
@@ -246,28 +264,44 @@ def ModelTraining(model, X_train, Y_train, validation_data,
 def ModelEvaluate(model, X_val, Y_val, data_test_idx_current, eval_batch_size=32):
 
     Y_pred = model.predict(X_val, batch_size=eval_batch_size)
-    overall_pcc = pearsonr(Y_pred[:,0],Y_val)[0]
-    overall_rmse = mean_squared_error(Y_val,Y_pred[:,0],squared=False)
-    overall_spearman = spearmanr(Y_pred[:,0],Y_val)[0]
-    overall_rsquared = r2_score(Y_val,Y_pred[:,0])
     
+    val_scores = frm.compute_performace_scores(params,
+                                                y_true = Y_val,
+                                                y_pred= Y_pred[:,0],
+                                                stage = 'val',
+                                                outdir = params["model_outdir"],
+                                                metrics = metrics_list)
+    
+    pcc = val_scores['pcc']
+    rmse = val_scores['rmse']
+    mse = val_scores['mse']
+    spearman = val_scores['scc']
+    rsquared = val_scores['r2']
+    val_loss = val_scores['val_loss']
     # Printing: 
-    print('Overall PCC: %.4f' % overall_pcc)
-    print('Overall RMSE: %.4f' % overall_rmse)
-    print('Overall Spearman: %.4f' % overall_spearman)
-    print('Overall R2: %.4f' % overall_rsquared)
-    return overall_pcc, overall_rmse, overall_spearman, overall_rsquared, Y_pred
+    print('Overall PCC: %.4f' % pcc)
+    print('Overall RMSE: %.4f' % rmse)
+    print('Overall Spearman: %.4f' % spearman)
+    print('Overall R2: %.4f' % rsquared)
+    print('Overall MSE: %.4f' % mse)
+    print('Overall Val Loss: %.4f' % val_loss)
+    return pcc, rmse, spearman, rsquared, Y_pred
 
 
 def main(params):
     print('In main function:\n')
     ckpt_dir = params["ckpt_directory"]
     output_dir = params["output_dir"]
+    # Build model path
+    modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
+    print('Where the model is saved: ')
+    print(modelpath)
     if not os.path.exists(ckpt_dir):
         os.makedirs(ckpt_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir) 
     
+    # os.makedirs('out_models/GDSCv1/split_4/model.pt')
     # Hyperparameters
     batch_size = params["batch_size"]
     seed = params["rng_seed"]
@@ -307,7 +341,6 @@ def main(params):
     
     X_test_drug_feat, X_test_drug_adj, X_test_cellline_feat, Y_test = FeatureExtract(data_val_idx, drug_feature, params, israndom=False)
     X_test_cellline_feat = (X_test_cellline_feat - X_train_cellline_feat_mean) / X_train_cellline_feat_std
-    # X_test = [X_test_drug_feat,X_test_drug_adj,X_test_cellline_feat,np.array([ppi_adj for i in range(X_test_drug_feat.shape[0])])]
     X_test = [X_test_drug_feat, X_test_drug_adj, X_test_cellline_feat, 
                 np.tile(ppi_adj, (X_test_drug_feat.shape[0], 1, 1))]
 
@@ -334,6 +367,13 @@ def main(params):
                           validation_data=val_data,
                           params=params)
 
+    # Save the model
+    model.save(pj(output_dir, 'MyBestDualGCNModel_force.h5'))
+    
+    # Save the history of the model into a txt
+    with open(pj(output_dir, 'history.txt'), 'w') as f:
+        f.write(str(history.history))
+    print('Model trained!')
     print("... Evaluate the model ...")
     cancertype2pcc, overall_rmse, overall_spearman, overall_rsquared, Y_pred = ModelEvaluate(model=model,
                                   X_val=X_test,
@@ -342,26 +382,32 @@ def main(params):
                                   eval_batch_size=batch_size)
     print('Evaluation finished!')
     
-    # Reshape into a single column both Y_test and Y_pred
-    print(type(Y_test))
-    print(type(Y_pred))
+    # Reshape Y_test and Y_pred to 1-dimensional
     Y_test = Y_test.reshape(-1, 1).flatten()
     Y_pred = Y_pred.reshape(-1, 1).flatten()
-    # Y_test_1d = Y_test.flatten()  # Convert Y_test to 1-dimensional if it's not already
-    # Y_pred_1d = Y_pred.flatten()  # Convert Y_pred to 1-dimensional if it's not already
+    
+    # ------------------------------------------------------
+    # [Req] Save raw predictions in dataframe
+    # ------------------------------------------------------
     frm.store_predictions_df(params,
                              y_true = Y_test,
                              y_pred = Y_pred,
                              stage = 'val',
-                             outdir = modelpath)
+                             outdir = params["model_outdir"])
     
-    val_scores = frm.compute_performance_scores(params,
+    # ------------------------------------------------------
+    # [Req] Compute performance scores
+    # ------------------------------------------------------
+    val_scores = frm.compute_performace_scores(params,
                                                 y_true = Y_test,
-                                                y_pred = Y_pred,
+                                                y_pred= Y_pred,
                                                 stage = 'val',
-                                                outdir = modelpath,
+                                                outdir = params["model_outdir"],
                                                 metrics = metrics_list)
-    print(val_scores)
+    
+    
+    
+    # print(val_scores) 
     print("Done!")
     return None
     
@@ -369,5 +415,6 @@ def main(params):
 
 
 if __name__ == "__main__":
+    params = initialize_parameters()
     main(params)
     print("Done!")

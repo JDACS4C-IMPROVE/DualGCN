@@ -313,8 +313,9 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     ckpt_save_weights_only = params["ckpt_save_weights_only"]
     ckpt_save_best_metric = params["ckpt_save_best_metric"]
     metrics = params["metrics"]
-    loss_func = params["loss"]
     improve_score_path = pj(params["output_dir"], "scores.json")
+    loss_func = 'mean_squared_error'
+
 
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
     model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics)

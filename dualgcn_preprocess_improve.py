@@ -37,11 +37,11 @@ from typing import Dict
 # Ignore warnings:
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# IMPROVE/CANDLE:
+# [Req] IMPROVE/CANDLE imports:
 from improve import framework as frm
 from improve import drug_resp_pred as drp
 
-# Model related:
+# Model specific imports:
 from model_utils import gene_information as gi
 from model_utils.drug_utils import smiles_to_molecules, rdkit_mols_to_dc_features, save_hickles
 
@@ -50,7 +50,24 @@ from model_utils.drug_utils import smiles_to_molecules, rdkit_mols_to_dc_feature
 filepath = Path(__file__).resolve().parent
 print(filepath)
 
-# Loading the parameters:
+# ---------------------
+# [Req] Parameter lists
+# ---------------------
+# Two parameter lists are required:
+# 1. app_preproc_params
+# 2. model_preproc_params
+# 
+# The values for the parameters in both lists should be specified in a
+# parameter file that is passed as default_model arg in
+# frm.initialize_parameters().
+
+# 1. App-specific params (App: monotherapy drug response prediction)
+# Note! This list should not be modified (i.e., no params should added or
+# removed from the list.
+# 
+# There are two types of params in the list: default and required
+# default:   default values should be used
+# required:  these params must be specified for the model in the param file
 app_preproc_params = [
     {"name": "y_data_files", # default
      "type": str,
@@ -82,19 +99,29 @@ app_preproc_params = [
 
 ]
 
+# 2. Model-specific params (Model: DualGCN)
+# All params in model_preproc_params are optional.
+# If no params are required by the model, then it should be an empty list.
 model_preproc_params = []
 
 # Combine the two lists (the combined parameter list will be passed to
+# frm.initialize_parameters() in the main().
 preprocess_parameters = app_preproc_params + model_preproc_params
-def run(params: Dict):
+# ---------------------
 
+def run(params: Dict) -> str:
+    
+    # ------------------------------------------------------
+    # [Req] Build paths and create output dir
+    # ------------------------------------------------------
+    # Build paths for raw_data, x_data, y_data, splits
     params = frm.build_paths(params)
 
     frm.create_outdir(outdir = params['ml_data_outdir'])
 
     ## --------------------------------------------------------------------------
-    # --------------------------- Developer's Notes
-
+    # --------------------------- Developer's Notes -----------------------------
+    # --------------------------------------------------------------------------
     # NOTE: The omics object and the drug objects are created using the provided functions.
 
     # NOTE 2: The omics object and the drug object loads ALL the data and we access 
@@ -103,7 +130,6 @@ def run(params: Dict):
 
     # NOTE 3: The data are loaded into Pandas Dataframe (how much memory is needed?)
     # documentation.
-
 
     # Load Omics data.
     print("\nLoads omics data.")
@@ -142,7 +168,7 @@ def run(params: Dict):
     for stage, split_file in stages.items():
         dr = drp.DrugResponseLoader(params, split_file = split_file, verbose = True)
         df_response = dr.dfs['response.tsv']
-        
+
         # Keep only the required columns in the dataframe:
         df_response[['improve_sample_id', 'improve_chem_id', 'auc']]
         df_response.dropna(inplace=True)
@@ -155,18 +181,18 @@ def run(params: Dict):
         mols = smiles_to_molecules(smi_list)
         # print(mols)
         features = rdkit_mols_to_dc_features(mols)
-        
+
         # Save the features in a directory
         save_hickles(features, list_drugs, params['ml_data_outdir'] + '/drug_features/')
         # print shape and head
         print(f"Stage: {stage}")
         print(df_response.shape)
         print(df_response.head())
-        
+
         frm.save_stage_ydf(df_response, params, stage)
-    
+
     return params['ml_data_outdir']
-    
+
 def main(args): 
     # req:
     additional_definitions = preprocess_parameters
@@ -175,7 +201,8 @@ def main(args):
                                        additional_definitions = additional_definitions, 
                                        required=None)
     ml_data_outdir = run(params)
-    print("\nFinished Data Preprocessing")
-    
+    print(f"\n Data Preprocessing finished. Data saved in {ml_data_outdir}")
+    print("\n Finished Data Preprocessing")
+
 if __name__ == "__main__":
     main(sys.argv[1:])

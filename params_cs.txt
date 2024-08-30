@@ -2,11 +2,10 @@
 model_name = "DualGCN"
 
 [Preprocess]
-train_split_file = "GDSCv1_split_0_train.txt"
-val_split_file = "GDSCv1_split_0_val.txt"
+train_split_file = "gCSI_split_0_train.txt"
+val_split_file = "gCSI_split_0_val.txt"
 test_split_file = "CCLE_all.txt"
-ml_data_outdir = "./ml_data/GDSCv1-CCLE/split_0"
-data_format = ".pt"
+ml_data_outdir = "./ml_data/gCSI-CCLE/split_0"
 y_data_files = [["response.tsv"]]
 x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]], ["cancer_copy_number.tsv", ["Gene_Symbol"]]]
 x_data_drug_files = [["drug_SMILES.tsv"]]
@@ -14,15 +13,13 @@ use_lincs = True
 scaling = "std"
 
 [Train]
-train_ml_data_dir = "./ml_data/GDSCv1-CCLE/split_0"
-val_ml_data_dir = "./ml_data/GDSCv1-CCLE/split_0"
-model_outdir = "./out_models/GDSCv1/split_0"
+train_ml_data_dir = "./ml_data/gCSI-gCSI/split_0"
+val_ml_data_dir = "./ml_data/gCSI-gCSI/split_0"
 model_file_name = "model"
-model_file_format = ".pt"
-epochs = 1
-batch_size = 8
+model_file_format = ".h5"
+epochs = 2
+batch_size = 16
 val_batch = 8
-loss = "mean_squared_error"
 early_stop_metric = "mse"
 patience = 20
 ckpt_save_interval = 5
@@ -33,9 +30,9 @@ log_interval = 20
 cuda_name = "cuda:7"
 # Model definition
 Max_atoms = 230
-drug_path = "./ml_data/GDSCv1-CCLE/split_0/drug_features/"
-ppi_path = "./ml_data/GDSCv1-CCLE/split_0_PPI/PPI_network_new.txt"
-omics_path = "./ml_data/GDSCv1-CCLE/split_0_omics_data/"
+drug_path = "./ml_data/gCSI-gCSI/split_0/drug_features/"
+ppi_path = "./ml_data/gCSI-gCSI/split_0_PPI/PPI_network_new.txt"
+omics_path = "./ml_data/gCSI-gCSI/split_0_omics_data/"
 metrics = ['mse']
 use_gexpr = True
 use_cnv = True
@@ -63,8 +60,8 @@ train_data = 'train_data'
 val_data = 'val_data'
 
 [Infer]
-test_ml_data_dir = "./ml_data/GDSCv1-CCLE/split_0"
-model_dir = "./out_models/GDSCv1/split_0"
-infer_outdir = "./out_infer/GDSCv1-CCLE/split_0"
+test_ml_data_dir = "./ml_data/GDSCv1-CCLE/split_4"
+model_dir = "./out_models/GDSCv1/split_4"
+infer_outdir = "./out_infer/GDSCv1-CCLE/split_4"
 test_batch = 256
 cuda_name = "cuda:7"
