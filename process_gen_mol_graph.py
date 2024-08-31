@@ -155,7 +155,7 @@ def test_improve_to_hickle():
         split_file_name=f"{source_data_name}_split_{split}_val.txt",
         y_col_name=y_col_name
         )
-    improve_utils_to_hickle(x, save_dir="data_new/drug/test")
+    improve_utils_to_hickle(x, output_dir="data_new/drug/test")
     return None    
 
 if __name__ == "__main__":

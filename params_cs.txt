@@ -1,0 +1,66 @@
+[Global_Params]
+model_name = "DualGCN"
+
+[Preprocess]
+train_split_file = "gCSI_split_0_train.txt"
+val_split_file = "gCSI_split_0_val.txt"
+test_split_file = "CCLE_all.txt"
+ml_data_outdir = "./ml_data/gCSI-CCLE/split_0"
+y_data_files = [["response.tsv"]]
+x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]], ["cancer_copy_number.tsv", ["Gene_Symbol"]]]
+x_data_drug_files = [["drug_SMILES.tsv"]]
+use_lincs = True
+scaling = "std"
+
+[Train]
+train_ml_data_dir = "./ml_data/gCSI-gCSI/split_0"
+val_ml_data_dir = "./ml_data/gCSI-gCSI/split_0"
+model_file_name = "model"
+model_file_format = ".h5"
+epochs = 2
+batch_size = 16
+val_batch = 8
+early_stop_metric = "mse"
+patience = 20
+ckpt_save_interval = 5
+n_fold = 100
+learning_rate = 0.0001
+model_arch = "GCN"
+log_interval = 20
+cuda_name = "cuda:7"
+# Model definition
+Max_atoms = 230
+drug_path = "./ml_data/gCSI-gCSI/split_0/drug_features/"
+ppi_path = "./ml_data/gCSI-gCSI/split_0_PPI/PPI_network_new.txt"
+omics_path = "./ml_data/gCSI-gCSI/split_0_omics_data/"
+metrics = ['mse']
+use_gexpr = True
+use_cnv = True
+regression = True
+
+drug_gcn_units_list = [256, 128]
+cell_feature_fc_units_list = [32, 128]
+dense = [256, 128, 10]
+cell_line_gcn_units_list = [256, 256, 256, 256]
+universal_dropout = 0.1
+fc_layers_dropout = [0.3, 0.2, 0]
+
+# Checkpoints and logs
+ckpt_directory = "./out_model/gCSI/split_0"
+ckpt_save_best = True
+ckpt_save_weights_only = False
+ckpt_save_best_metric = "val_loss"
+log_dir = "./logs/"
+
+set = 'mixed'
+test_batch = 256
+test_data ='test_data'
+train_data = 'train_data'
+val_data = 'val_data'
+
+[Infer]
+test_ml_data_dir = "./ml_data/gCSI-gCSI/split_0"
+model_dir = "./out_model/gCSI/split_0"
+infer_outdir = "./out_model/gCSI/split_0"
+test_batch = 256
+cuda_name = "cuda:7"
