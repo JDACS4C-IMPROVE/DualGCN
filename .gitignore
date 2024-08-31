@@ -18,3 +18,4 @@ data/IMPROVE_CCLE/*
 ml_data/*
 *.ipynb
 *.simg
+*.h5

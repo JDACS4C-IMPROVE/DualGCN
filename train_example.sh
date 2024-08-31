@@ -2,10 +2,10 @@
 
 set -ue
 
-epochs=20
+# epochs=20
 # epochs=1
 # epochs=20
-# epochs=100
+epochs=200
 # epochs=500
 
 # Start timer

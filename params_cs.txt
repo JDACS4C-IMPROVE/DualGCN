@@ -46,11 +46,10 @@ universal_dropout = 0.1
 fc_layers_dropout = [0.3, 0.2, 0]
 
 # Checkpoints and logs
-ckpt_directory = "./checkpoints/"
+ckpt_directory = "./out_model/gCSI/split_0"
 ckpt_save_best = True
 ckpt_save_weights_only = False
 ckpt_save_best_metric = "val_loss"
-output_dir = "./IMPROVE_output"
 log_dir = "./logs/"
 
 set = 'mixed'
@@ -60,8 +59,8 @@ train_data = 'train_data'
 val_data = 'val_data'
 
 [Infer]
-test_ml_data_dir = "./ml_data/GDSCv1-CCLE/split_4"
-model_dir = "./out_models/GDSCv1/split_4"
-infer_outdir = "./out_infer/GDSCv1-CCLE/split_4"
+test_ml_data_dir = "./ml_data/gCSI-gCSI/split_0"
+model_dir = "./out_model/gCSI/split_0"
+infer_outdir = "./out_model/gCSI/split_0"
 test_batch = 256
 cuda_name = "cuda:7"

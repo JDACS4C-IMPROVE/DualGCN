@@ -11,8 +11,8 @@ All the outputs from this train script are saved in params["model_outdir"].
    The model is trained with train data and validated with val data. The model
    file name and file format are specified, respectively by
    params["model_file_name"] and params["model_file_format"].
-   For GraphDRP, the saved model:
-        model.pt
+   For DualGCN, the saved model:
+        model.h5
 
 2. Predictions on val data. 
    Raw model predictions calcualted using the trained model on val data. The
@@ -241,7 +241,7 @@ def on_epoch_end(self, epoch, logs={}):
 def ModelTraining(model, X_train, Y_train, validation_data, 
                   params):
     learn_rate = params["learning_rate"]
-    ckpt_directory = params["output_dir"]
+    ckpt_directory = params["model_outdir"]
     batch_size = params["batch_size"]
     nb_epoch = params["epochs"]
     result_file_path = pj(ckpt_directory, 'best_DualGCNmodel_new.h5')
@@ -251,7 +251,7 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     ckpt_save_best_metric = params["ckpt_save_best_metric"]
     metrics = params["metrics"]
     loss_func = params["loss"]
-    improve_score_path = pj(params["output_dir"], "scores.json")
+    improve_score_path = pj(params["model_outdir"], "scores.json")
 
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
     model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics)
@@ -291,11 +291,13 @@ def ModelEvaluate(model, X_val, Y_val, data_test_idx_current, eval_batch_size=32
 def main(params):
     print('In main function:\n')
     ckpt_dir = params["ckpt_directory"]
-    output_dir = params["output_dir"]
+    output_dir = params["model_outdir"]
     # Build model path
     modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
     print('Where the model is saved: ')
     print(modelpath)
+    
+    # Check if the directories exist, if not create them
     if not os.path.exists(ckpt_dir):
         os.makedirs(ckpt_dir)
     if not os.path.exists(output_dir):
@@ -368,10 +370,10 @@ def main(params):
                           params=params)
 
     # Save the model
-    model.save(pj(output_dir, 'MyBestDualGCNModel_force.h5'))
+    model.save(output_dir + '/model.h5')
     
     # Save the history of the model into a txt
-    with open(pj(output_dir, 'history.txt'), 'w') as f:
+    with open(output_dir + 'history.txt', 'w') as f:
         f.write(str(history.history))
     print('Model trained!')
     print("... Evaluate the model ...")
