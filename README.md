@@ -138,7 +138,7 @@ ml_data
 
 These files are used in the training stage to build both the molecular graph and the drug graph. The PPI network comes from the original paper. 
 
-### 5. Train GraphDRP model
+### 5. Train DualGCN model
 ```bash
 python dualgcn_train_improve.py
 ```
@@ -151,22 +151,9 @@ Generates:
 * prediction performance scores on val data: `val_scores.json`
 ```
 out_models
-└── GDSCv1
+└── gCSI
     └── split_0
-        ├── best -> /lambda_stor/data/apartin/projects/IMPROVE/pan-models/GraphDRP/out_models/GDSCv1/split_0/epochs/002
-        ├── epochs
-        │   ├── 001
-        │   │   ├── ckpt-info.json
-        │   │   └── model.h5
-        │   └── 002
-        │       ├── ckpt-info.json
-        │       └── model.h5
-        ├── last -> /lambda_stor/data/apartin/projects/IMPROVE/pan-models/GraphDRP/out_models/GDSCv1/split_0/epochs/002
-        ├── model.pt
-        ├── out_models
-        │   └── GDSCv1
-        │       └── split_0
-        │           └── ckpt.log
+        ├── model.h5
         ├── val_scores.json
         └── val_y_data_predicted.csv
 ```
@@ -182,7 +169,7 @@ Generates:
 * prediction performance scores on test data: `test_scores.json`
 ```
 out_infer
-└── GDSCv1-CCLE
+└── gCSI-gCSI
     └── split_0
         ├── test_scores.json
         └── test_y_data_predicted.csv
