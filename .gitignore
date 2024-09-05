@@ -19,5 +19,6 @@ ml_data/*
 *.ipynb
 *.simg
 *.h5
-gpu_logs_strip.txt
+./gpu_logs_strip.txt
+./gpu_logs.txt
 gpu_logs.txt
