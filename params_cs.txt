@@ -2,15 +2,15 @@
 model_name = "DualGCN"
 
 [Preprocess]
-train_split_file = "gCSI_split_0_train.txt"
-val_split_file = "gCSI_split_0_val.txt"
-test_split_file = "CCLE_all.txt"
-ml_data_outdir = "./ml_data/gCSI-CCLE/split_0"
+train_split_file = gCSI_split_0_train.txt
+val_split_file = gCSI_split_0_val.txt
+test_split_file = gCSI_split_0_test.txt
 y_data_files = [["response.tsv"]]
 x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]], ["cancer_copy_number.tsv", ["Gene_Symbol"]]]
 x_data_drug_files = [["drug_SMILES.tsv"]]
 use_lincs = True
 scaling = "std"
+data_format = .parquet
 
 [Train]
 train_ml_data_dir = "./ml_data/gCSI-gCSI/split_0"

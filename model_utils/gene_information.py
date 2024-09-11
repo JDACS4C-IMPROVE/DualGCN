@@ -57,8 +57,8 @@ def emulating_original_data(output_dir, ge, cn):
     # Set first column as index
     ge = ge.set_index(ge.columns[0])
     cn = cn.set_index(cn.columns[0])
-    if not os.path.exists(output_dir + "_omics_data/"):
-        os.makedirs(output_dir + "_omics_data/", exist_ok=True)
+    if not os.path.exists(output_dir + "/omics_data"):
+        os.makedirs(output_dir + "/omics_data", exist_ok=True)
         
     # df_ge = iu.load_gene_expression_data(gene_system_identifier="Gene_Symbol", )
     # df_cn = iu.load_copy_number_data(gene_system_identifier="Gene_Symbol")
@@ -71,7 +71,7 @@ def emulating_original_data(output_dir, ge, cn):
     genes_not_in_dataset = [x for x in gene_list if x not in ge.columns]
     
     # Write intersection genes into gene_list.txt.
-    with open(output_dir + "gene_list.txt", 'w') as file:
+    with open(output_dir + "/gene_list.txt", 'w') as file:
         for item in gene_list:
             file.write(str(item) + '\n')
 
@@ -82,7 +82,7 @@ def emulating_original_data(output_dir, ge, cn):
         df_patient = pd.concat([gene_exp, copy_num], axis=1)
         df_patient = df_patient.loc[gene_list]
         df_patient.columns = ['gene_expression', 'copy_number']
-        df_patient.to_csv(output_dir + f'_omics_data/{patient}.csv', sep=',', index=True, header=True)
+        df_patient.to_csv(output_dir + f'/omics_data/{patient}.csv', sep=',', index=True, header=True)
 
     return genes_not_in_dataset
 
@@ -92,15 +92,13 @@ def ppi_preprocessing(output_dir, genes_not_in_dataset):
     Function to preprocess the PPI network. The only difference is the removal of the genes that are not in the dataset.
     Save the processed PPI to output_dir/PPI/PPI_network_new.txt
     """
-    if not os.path.exists(output_dir + "_PPI/"):
-        os.makedirs(output_dir + "_PPI/", exist_ok=True)
         
     ppi = pd.read_csv('./data/PPI/PPI_network.txt', sep='\t', header=None)
     ppi_new = ppi.copy()
     for gene in genes_not_in_dataset:
         ppi_new = ppi_new[ppi_new[0] != gene]
         ppi_new = ppi_new[ppi_new[1] != gene]
-    ppi_new.to_csv(output_dir + '_PPI/PPI_network_new.txt', sep='\t', index=False, header=False)
+    ppi_new.to_csv(output_dir + '/PPI_network_new.txt', sep='\t', index=False, header=False)
 
 
 def preprocess_omics_data(output_dir, ge, cn):

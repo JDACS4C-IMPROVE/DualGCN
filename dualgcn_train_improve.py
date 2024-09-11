@@ -45,10 +45,11 @@ from scipy import stats
 # from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_squared_error, r2_score
 
-# [Req] IMPROVE/CANDLE imports
-import improve.framework as frm
-from improve.metrics import compute_metrics
-from improve import drug_resp_pred as drp
+# [Req] IMPROVE imports
+from improvelib.applications.drug_response_prediction.config import DRPTrainConfig
+from improvelib.utils import str2bool
+import improvelib.utils as frm
+from improvelib.metrics import compute_metrics
 
 # Custom libraries:
 from code.model import KerasMultiSourceDualGCNModel
@@ -293,7 +294,7 @@ def main(params):
     ckpt_dir = params["ckpt_directory"]
     output_dir = params["model_outdir"]
     # Build model path
-    modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
+    modelpath = frm.build_model_path(params, model_dir=params["model_outdir"], model_file_format=params["model_file_format"], model_dir=params["output_dir"])
     print('Where the model is saved: ')
     print(modelpath)
     
