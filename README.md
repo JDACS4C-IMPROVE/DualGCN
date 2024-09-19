@@ -11,11 +11,12 @@ A more detailed tutorial can be found [here](https://jdacs4c-improve.github.io/d
 ## Dependencies
 Installation instuctions are detialed below in [Step-by-step instructions](#step-by-step-instructions).
 
-Conda `yml` file [conda_env_py37.sh](./conda_env_py37.sh)
+Conda `yml` file [environment_setup.sh](./environment_setup.sh)
 
 ML framework:
 + [TensorFlow](https://www.tensorflow.org) -- deep learning framework for building the prediction model
 + [Networkx](https://networkx.org/documentation/stable/index.html) -- Graph and Complex Networks.
++ [Rdkit](https://www.rdkit.org) -- Molecular graphs and cheminformatics toolbox.
 
 IMPROVE dependencies:
 + [IMPROVE v0.0.3-beta](https://github.com/JDACS4C-IMPROVE/IMPROVE/tree/v0.0.3-beta)
@@ -76,17 +77,17 @@ Note that `./_original_data` contains data files that were used to train and eva
 ```
 git clone git@github.com:JDACS4C-IMPROVE/DualGCN.git
 cd DualGCN
-git checkout training
+git checkout legacy-v0.0.3-beta
 ```
 
 
 ### 2. Set computational environment
 Option 1: create conda env using `yml`
 ```
-conda env create -f conda_env_lambda_graphdrp_py37.yml
+conda env create -f environment.yml
 ```
 
-Option 2: check [conda_env_py37.sh](./conda_env_py37.sh)
+Option 2: check [environment_setup.sh](./environment_setup.sh)
 
 
 ### 3. Run `setup_improve.sh`.
@@ -102,66 +103,64 @@ This will:
 
 ### 4. Preprocess CSA benchmark data (_raw data_) to construct model input data (_ML data_)
 ```bash
-bash preprocessing_example.sh
+bash preprocess_example.sh
 ```
 
 Preprocesses the CSA data and creates train, validation (val), and test datasets.
 
 Generates:
-* three model input data files: `train_data.pt`, `val_data.pt`, `test_data.pt`
-* three tabular data files, each containing the drug response values (i.e. AUC) and corresponding metadata: `train_y_data.csv`, `val_y_data.csv`, `test_y_data.csv`
+* Drug features saved in `Drug_id.hkl` files. 
+* Cell line information (both Gene Expression and CNV) saved in `cell_line_improve_id.csv` files.
+* Three tabular data files, each containing the drug response values (i.e. AUC) and corresponding metadata: `train_y_data.csv`, `val_y_data.csv`, `test_y_data.csv`. 
 
+The constructed tree is shown below:
 ```
 ml_data
-└── GDSCv1-CCLE
-    └── split_0
-        ├── processed
-        │   ├── test_data.pt
-        │   ├── train_data.pt
-        │   └── val_data.pt
-        ├── test_y_data.csv
-        ├── train_y_data.csv
-        ├── val_y_data.csv
-        └── x_data_gene_expression_scaler.gz
+└── gCSI-gCSI
+    ├── split_0
+    │   ├── drug_features
+    │   │   ├── Drug_0.hkl
+    │   │   ├── Drug_1.hkl
+    │   │   ├── ...
+    │   │   └── Drug_last_id.hkl
+    │   ├── test_y_data.csv
+    │    ├── train_y_data.csv
+    │    └── val_y_data.csv
+    ├── split_0_omics_data
+    │    ├── cell_line_0.csv
+    │    ├── cell_line_1.csv
+    │    ├── ...
+    │    └── cell_line_last_id.csv
+    ├── split_0_PPI
+    │   └── PPI_network_new.txt
+    └── split_0gene_list.txt
 ```
 
+These files are used in the training stage to build both the molecular graph and the drug graph. The PPI network comes from the original paper. 
 
-### 5. Train GraphDRP model
+### 5. Train DualGCN model
 ```bash
-python graphdrp_train_improve.py
+python dualgcn_train_improve.py
 ```
 
-Trains GraphDRP using the model input data: `train_data.pt` (training), `val_data.pt` (for early stopping).
+Trains DualGCN using the model input data.
 
 Generates:
-* trained model: `model.pt`
+* trained model: `model.h5`
 * predictions on val data (tabular data): `val_y_data_predicted.csv`
 * prediction performance scores on val data: `val_scores.json`
 ```
 out_models
-└── GDSCv1
+└── gCSI
     └── split_0
-        ├── best -> /lambda_stor/data/apartin/projects/IMPROVE/pan-models/GraphDRP/out_models/GDSCv1/split_0/epochs/002
-        ├── epochs
-        │   ├── 001
-        │   │   ├── ckpt-info.json
-        │   │   └── model.h5
-        │   └── 002
-        │       ├── ckpt-info.json
-        │       └── model.h5
-        ├── last -> /lambda_stor/data/apartin/projects/IMPROVE/pan-models/GraphDRP/out_models/GDSCv1/split_0/epochs/002
-        ├── model.pt
-        ├── out_models
-        │   └── GDSCv1
-        │       └── split_0
-        │           └── ckpt.log
+        ├── model.h5
         ├── val_scores.json
         └── val_y_data_predicted.csv
 ```
 
 
 ### 6. Run inference on test data with the trained model
-```python graphdrp_infer_improve.py```
+```python dualgcn_infer_improve.py```
 
 Evaluates the performance on a test dataset with the trained model.
 
@@ -170,7 +169,7 @@ Generates:
 * prediction performance scores on test data: `test_scores.json`
 ```
 out_infer
-└── GDSCv1-CCLE
+└── gCSI-gCSI
     └── split_0
         ├── test_scores.json
         └── test_y_data_predicted.csv

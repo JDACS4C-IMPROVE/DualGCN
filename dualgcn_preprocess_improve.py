@@ -37,9 +37,18 @@ from typing import Dict
 # Ignore warnings:
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# [Req] IMPROVE/CANDLE imports:
-from improve import framework as frm
-from improve import drug_resp_pred as drp
+# [Req] IMPROVE imports
+# Core improvelib imports
+
+from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+from improvelib.utils import str2bool
+import improvelib.utils as frm
+# Application-specific (DRP) imports
+import improvelib.applications.drug_response_prediction.drug_utils as drugs_utils
+import improvelib.applications.drug_response_prediction.omics_utils as omics_utils
+import improvelib.applications.drug_response_prediction.drp_utils as drp
+# from improve import framework as frm
+# from improve import drug_resp_pred as drp
 
 # Model specific imports:
 from model_utils import gene_information as gi
@@ -117,7 +126,7 @@ def run(params: Dict) -> str:
     # Build paths for raw_data, x_data, y_data, splits
     params = frm.build_paths(params)
 
-    frm.create_outdir(outdir = params['ml_data_outdir'])
+    frm.create_outdir(outdir = params['output_dir'])
 
     ## --------------------------------------------------------------------------
     # --------------------------- Developer's Notes -----------------------------
@@ -133,13 +142,13 @@ def run(params: Dict) -> str:
 
     # Load Omics data.
     print("\nLoads omics data.")
-    omics_obj = drp.OmicsLoader(params)
+    omics_obj = omics_utils.OmicsLoader(params)
     ge = omics_obj.dfs['cancer_gene_expression.tsv'] # return gene expression
     cn = omics_obj.dfs['cancer_copy_number.tsv']  # return copy number
 
     # Load Drug Data.
     print("\nLoad drugs data.")
-    drugs_obj = drp.DrugsLoader(params)
+    drugs_obj = drugs_utils.DrugsLoader(params)
     smi = drugs_obj.dfs['drug_SMILES.tsv']  # return SMILES data
     # Put index in a column and name that column 'improve_chem_id'
     smi.reset_index(inplace=True)
@@ -147,8 +156,16 @@ def run(params: Dict) -> str:
     # print(smi)
 
     # Save files on GDSCv1-CCLE/split0
-    gi.preprocess_omics_data(params['ml_data_outdir'], ge, cn)
+    gi.preprocess_omics_data(params['output_dir'], ge, cn)
 
+    # ------------------------------------------------------
+    # [Req] Construct ML data for every stage (train, val, test)
+    # ------------------------------------------------------
+    # All models must load response data (y data) using DrugResponseLoader().
+    # Below, we iterate over the 3 split files (train, val, test) and load
+    # response data, filtered by the split ids from the split files.
+
+    # Dict with split files corresponding to the three sets (train, val, and test)
     stages = {"train": params["train_split_file"],
             "val": params["val_split_file"],
             "test": params["test_split_file"]}
@@ -166,6 +183,9 @@ def run(params: Dict) -> str:
     # --------------------------------------------------------------------------------------
             
     for stage, split_file in stages.items():
+        # --------------------------------
+        # [Req] Load response data
+        # --------------------------------
         dr = drp.DrugResponseLoader(params, split_file = split_file, verbose = True)
         df_response = dr.dfs['response.tsv']
 
@@ -183,23 +203,33 @@ def run(params: Dict) -> str:
         features = rdkit_mols_to_dc_features(mols)
 
         # Save the features in a directory
-        save_hickles(features, list_drugs, params['ml_data_outdir'] + '/drug_features/')
+        save_hickles(features, list_drugs, params['output_dir'] + '/drug_features/')
         # print shape and head
         print(f"Stage: {stage}")
         print(df_response.shape)
         print(df_response.head())
 
-        frm.save_stage_ydf(df_response, params, stage)
-
-    return params['ml_data_outdir']
+        # --------------------------------
+        # -----------------------
+        # [Req] Save ML data files in params["output_dir"]
+        # The implementation of this step depends on the model.
+        # -----------------------
+        # [Req] Create data name
+        data_fname = frm.build_ml_data_file_name(data_format=params["data_format"], stage=stage)
+        # [Req] Save y dataframe for the current stage
+        print(data_fname)
+        frm.save_stage_ydf(ydf=df_response, stage=stage, output_dir=params["output_dir"])
+    return params['output_dir']
 
 def main(args): 
     # req:
     additional_definitions = preprocess_parameters
-    params = frm.initialize_parameters(filepath, 
-                                       default_model = 'params_cs.txt', 
-                                       additional_definitions = additional_definitions, 
-                                       required=None)
+    cfg = DRPPreprocessConfig()
+    params = cfg.initialize_parameters(
+        pathToModelDir=filepath,
+        default_config="params_cs.txt",
+        additional_definitions=additional_definitions
+    )
     ml_data_outdir = run(params)
     print(f"\n Data Preprocessing finished. Data saved in {ml_data_outdir}")
     print("\n Finished Data Preprocessing")

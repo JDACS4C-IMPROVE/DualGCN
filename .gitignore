@@ -19,3 +19,9 @@ ml_data/*
 *.ipynb
 *.simg
 *.h5
+./gpu_logs_strip.txt
+./gpu_logs.txt
+gpu_logs.txt
+exp_result/*
+exp_result_omics_data/*
+exp_result_PPI/*

@@ -6,53 +6,108 @@ channels:
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_gnu
+  - backcall=0.2.0=pyh9f0ad1d_0
   - backports=1.0=pyhd8ed1ab_3
-  - backports.functools_lru_cache=1.6.4=pyhd8ed1ab_0
-  - ca-certificates=2022.12.7=ha878542_0
-  - certifi=2016.9.26=py36_0
+  - backports.functools_lru_cache=2.0.0=pyhd8ed1ab_0
+  - blas=1.0=openblas
+  - boost=1.74.0=py36h355b2fd_3
+  - boost-cpp=1.74.0=h75c5d50_8
+  - bzip2=1.0.8=h7b6447c_0
+  - ca-certificates=2024.6.2=hbcca054_0
+  - cairo=1.16.0=hb05425b_5
+  - certifi=2021.5.30=py36h06a4308_0
   - cudatoolkit=10.0.130=0
   - cudnn=7.6.5=cuda10.0_0
+  - cycler=0.11.0=pyhd3eb1b0_0
   - decorator=5.1.1=pyhd8ed1ab_0
   - entrypoints=0.4=pyhd8ed1ab_0
+  - expat=2.5.0=h6a678d5_0
+  - fontconfig=2.14.1=h4c34cd2_2
+  - freetype=2.12.1=h4a9f257_0
+  - giflib=5.2.1=h5eee18b_3
+  - glib=2.78.4=h6a678d5_0
+  - glib-tools=2.78.4=h6a678d5_0
+  - greenlet=1.1.1=py36h295c915_0
+  - icu=70.1=h27087fc_0
   - ipykernel=5.5.5=py36hcb3619a_0
-  - ipython=5.8.0=py36_1
-  - ipython_genutils=0.2.0=py_1
-  - jupyter_client=5.3.4=py36_0
-  - jupyter_core=4.5.0=py_0
-  - ld_impl_linux-64=2.40=h41732ed_0
+  - ipython=7.16.1=py36he448a4c_2
+  - ipython_genutils=0.2.0=pyhd8ed1ab_1
+  - jedi=0.17.2=py36h5fab9bb_1
+  - jpeg=9e=h5eee18b_1
+  - jupyter_client=7.1.2=pyhd8ed1ab_0
+  - jupyter_core=4.8.1=py36h5fab9bb_0
+  - kiwisolver=1.3.1=py36h2531618_0
+  - lcms2=2.12=h3be6417_0
+  - ld_impl_linux-64=2.40=hf3520f5_7
+  - lerc=3.0=h295c915_0
+  - libblas=3.9.0=16_linux64_openblas
+  - libcblas=3.9.0=16_linux64_openblas
+  - libdeflate=1.8=h7f8727e_5
   - libffi=3.4.2=h7f98852_5
-  - libgcc-ng=12.2.0=h65d4601_19
-  - libgomp=12.2.0=h65d4601_19
-  - libnsl=2.0.0=h7f98852_0
+  - libgcc-ng=13.2.0=h77fa898_13
+  - libgfortran-ng=11.2.0=h00389a5_1
+  - libgfortran5=11.2.0=h1234567_1
+  - libglib=2.78.4=hdc74915_0
+  - libgomp=13.2.0=h77fa898_13
+  - libiconv=1.17=hd590300_2
+  - liblapack=3.9.0=16_linux64_openblas
+  - libnsl=2.0.1=hd590300_0
+  - libopenblas=0.3.21=h043d6bf_0
+  - libpng=1.6.39=h5eee18b_0
   - libsodium=1.0.18=h36c2ea0_1
-  - libsqlite=3.40.0=h753d276_0
-  - libstdcxx-ng=12.2.0=h46fd767_19
+  - libsqlite=3.46.0=hde9e2c9_0
+  - libstdcxx-ng=13.2.0=hc0a3c3a_13
+  - libtiff=4.4.0=hecacb30_2
+  - libuuid=1.41.5=h5eee18b_0
+  - libwebp=1.2.4=h11a3e52_1
+  - libwebp-base=1.2.4=h5eee18b_1
+  - libxcb=1.15=h7f8727e_0
+  - libxml2=2.10.3=hca2bb57_4
   - libzlib=1.2.13=h166bdaf_4
-  - ncurses=6.3=h27087fc_1
-  - openssl=1.1.1t=h0b41bf4_0
+  - lz4-c=1.9.4=h6a678d5_0
+  - matplotlib=3.3.2=0
+  - matplotlib-base=3.3.2=py36h817c723_0
+  - ncurses=6.5=h59595ed_0
+  - nest-asyncio=1.6.0=pyhd8ed1ab_0
+  - numpy-base=1.19.2=py36h75fe3a5_0
+  - olefile=0.46=pyhd3eb1b0_0
+  - openbabel=3.1.1=py36he0ca515_2
+  - openssl=1.1.1w=h7f8727e_0
+  - parso=0.7.1=pyh9f0ad1d_0
+  - pcre2=10.42=hebb0a14_0
   - pexpect=4.8.0=pyh1a96a4e_2
   - pickleshare=0.7.5=py_1003
-  - pip=20.0.2=py36_1
-  - prompt_toolkit=1.0.15=py_1
+  - pip=21.3.1=pyhd8ed1ab_0
+  - pixman=0.40.0=h7f8727e_1
+  - prompt-toolkit=3.0.36=pyha770c72_0
+  - prompt_toolkit=3.0.36=hd8ed1ab_0
   - ptyprocess=0.7.0=pyhd3deb0d_0
-  - pygments=2.12.0=pyhd8ed1ab_0
+  - pycairo=1.19.1=py36h708ec4a_0
+  - pygments=2.14.0=pyhd8ed1ab_0
   - python=3.6.15=hb7a2778_0_cpython
   - python-dateutil=2.8.2=pyhd8ed1ab_0
   - python_abi=3.6=2_cp36m
-  - pyzmq=19.0.2=py36h9947dbf_2
+  - pyzmq=22.3.0=py36h7068817_0
+  - rdkit=2021.03.5=py36hbacbb34_0
   - readline=8.2=h8228510_1
-  - setuptools=49.6.0=py36h5fab9bb_3
+  - reportlab=3.5.67=py36hfdd840d_1
+  - seaborn=0.11.2=pyhd3eb1b0_0
+  - setuptools=58.0.4=py36h5fab9bb_2
   - simplegeneric=0.8.1=py_1
   - six=1.16.0=pyh6c4a22f_0
-  - sqlite=3.40.0=h4ff8645_0
-  - tk=8.6.12=h27826a3_0
+  - sqlalchemy=1.4.22=py36h7f8727e_0
+  - sqlite=3.46.0=h6d4b2fc_0
+  - tk=8.6.13=noxft_h4845f30_101
   - tornado=6.1=py36h8f6f2f9_1
   - traitlets=4.3.3=pyhd8ed1ab_2
-  - wcwidth=0.2.6=pyhd8ed1ab_0
-  - wheel=0.34.2=py36_0
+  - typing_extensions=4.1.1=pyh06a4308_0
+  - wcwidth=0.2.10=pyhd8ed1ab_0
+  - wheel=0.37.1=pyhd8ed1ab_0
   - xz=5.2.6=h166bdaf_0
-  - zeromq=4.3.4=h9c3ff4c_1
+  - zeromq=4.3.5=h59595ed_1
+  - zipp=3.6.0=pyhd3eb1b0_0
   - zlib=1.2.13=h166bdaf_4
+  - zstd=1.5.2=ha4553b6_0
   - pip:
       - absl-py==1.4.0
       - astor==0.8.1
@@ -60,11 +115,11 @@ dependencies:
       - cached-property==1.5.2
       - candle==0.0.1
       - charset-normalizer==2.0.12
-      - cycler==0.11.0
       - dataclasses==0.8
       - deepchem==2.4.0
       - dill==0.3.4
       - gast==0.5.3
+      - google-pasta==0.2.0
       - grpcio==1.48.2
       - h5py==2.10.0
       - hickle==5.0.2
@@ -75,9 +130,7 @@ dependencies:
       - keras==2.1.4
       - keras-applications==1.0.8
       - keras-preprocessing==1.1.2
-      - kiwisolver==1.3.1
       - markdown==3.3.7
-      - matplotlib==3.3.4
       - mock==5.0.1
       - numpy==1.19.5
       - pandas==1.1.5
@@ -91,14 +144,14 @@ dependencies:
       - scikit-learn==0.24.2
       - scipy==1.5.4
       - statsmodels==0.12.2
-      - tensorboard==1.13.1
-      - tensorflow-estimator==1.13.0
+      - tensorboard==1.14.0
+      - tensorflow==1.14.0
+      - tensorflow-estimator==1.14.0
       - tensorflow-gpu==1.13.1
       - termcolor==1.1.0
       - threadpoolctl==3.1.0
       - tqdm==4.64.1
-      - typing-extensions==4.1.1
       - urllib3==1.26.15
       - werkzeug==2.0.3
-      - zipp==3.6.0
+      - wrapt==1.16.0
 prefix: /homes/ac.cesarasa/miniconda3/envs/DualGCN36GPU

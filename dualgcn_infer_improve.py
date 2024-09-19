@@ -100,7 +100,7 @@ def run(params):
     ppi_adj = CelllineGraphAdjNorm(ppi_adj_info, common_genes, params)
     
     # Data Extraction
-    X_drug_feat, X_drug_adj, X_cellline_feat, Y = FeatureExtract(data_train_idx, 
+    X_drug_feat, X_drug_adj, X_cellline_feat, Y = FeatureExtract(data_test_idx, 
                                                                  drug_feature, 
                                                                  params, 
                                                                  israndom=False)
@@ -126,8 +126,14 @@ def run(params):
                                 X_val=X,
                                 Y_val=Y,
                                 data_test_idx_current=data_test_idx,
+                                params = params,
                                 eval_batch_size=batch_size)
     
+    # Reshape Y_test and Y_pred to 1-dimensional
+    # NOTE: This shall change in future releases
+    
+    Y = Y.reshape(-1, 1).flatten()
+    Y_pred = Y_pred.reshape(-1, 1).flatten()
     # ------------------------------------------------------
     # [Req] Save raw predictions in dataframe
     # ------------------------------------------------------
@@ -158,7 +164,7 @@ def main(args):
         required=None,
     )
     test_scores = run(params)
-    print("\nFinished model inference.")
+    print("\n Finished model inference.")
     return None
 
 # [Req]

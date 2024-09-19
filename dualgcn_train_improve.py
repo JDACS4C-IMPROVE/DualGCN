@@ -45,10 +45,11 @@ from scipy import stats
 # from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_squared_error, r2_score
 
-# [Req] IMPROVE/CANDLE imports
-import improve.framework as frm
-from improve.metrics import compute_metrics
-from improve import drug_resp_pred as drp
+# [Req] IMPROVE imports
+from improvelib.applications.drug_response_prediction.config import DRPTrainConfig
+from improvelib.utils import str2bool
+import improvelib.utils as frm
+from improvelib.metrics import compute_metrics
 
 # Custom libraries:
 from code.model import KerasMultiSourceDualGCNModel
@@ -261,7 +262,7 @@ def ModelTraining(model, X_train, Y_train, validation_data,
     history = model.fit(x=X_train, y=Y_train, batch_size=batch_size, epochs=nb_epoch, validation_data=validation_data, callbacks=None)
     return model, history
 
-def ModelEvaluate(model, X_val, Y_val, data_test_idx_current, eval_batch_size=32):
+def ModelEvaluate(model, X_val, Y_val, data_test_idx_current, params, eval_batch_size=32):
 
     Y_pred = model.predict(X_val, batch_size=eval_batch_size)
     
@@ -293,7 +294,7 @@ def main(params):
     ckpt_dir = params["ckpt_directory"]
     output_dir = params["model_outdir"]
     # Build model path
-    modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
+    modelpath = frm.build_model_path(params, model_dir=params["model_outdir"], model_file_format=params["model_file_format"], model_dir=params["output_dir"])
     print('Where the model is saved: ')
     print(modelpath)
     
@@ -381,6 +382,7 @@ def main(params):
                                   X_val=X_test,
                                   Y_val=Y_test,
                                   data_test_idx_current=data_test_idx,
+                                  params=params,
                                   eval_batch_size=batch_size)
     print('Evaluation finished!')
     

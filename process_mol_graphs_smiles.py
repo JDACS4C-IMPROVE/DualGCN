@@ -1,5 +1,5 @@
 """
-Code developed by @cesarasa
+Code developed by @ac.cesarasa
 
 I need to comment this code. NOTE: The test has some issues. It seems that there are hydrogen atoms without neighbors. 
 """
